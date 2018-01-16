@@ -242,7 +242,7 @@
 
 // overrides discourse-layouts css so election-banner is not included in topic-list border
 
-.main-content.has-sidebars .container.list-container {
+.main-content.has-sidebars div.container.list-container {
   border: none;
 
   .discovery-title-composer {
