@@ -292,3 +292,7 @@
   list-style: none;
   margin: 0;
 }
+
+.category-list tbody tr {
+  border-right: 1px solid $primary-low;
+}
