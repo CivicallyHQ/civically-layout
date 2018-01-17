@@ -266,6 +266,14 @@
   }
 }
 
+.main-content.topic.has-sidebars #topic-title .container div.title-wrapper {
+  width: initial;
+
+  .topic-category {
+    margin-top: 0;
+  }
+}
+
 #list-area .top-lists h2 {
   font-size: 1.2em;
 }
