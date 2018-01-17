@@ -115,14 +115,9 @@
   }
 }
 
-.map.expanded .place-about {
+.locations-map.expanded .place-about {
   top: 20px;
   left: 20px;
-
-  .place-avatar {
-    width: 42px;
-    height: 42px;
-  }
 
   &.list {
     top: 0;
