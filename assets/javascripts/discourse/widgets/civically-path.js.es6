@@ -5,13 +5,39 @@ import { h } from 'virtual-dom';
 createWidget('category-list-item', {
   tagName: 'li',
 
+  buildClasses(attrs) {
+    let classes = '';
+    if (attrs.firstPlace) {
+      classes += 'first-place';
+    }
+    return classes;
+  },
+
   html(attrs) {
     return h('span', attrs.category.name);
   },
 
   click() {
+    const categoryUrl = this.attrs.category.get('url');
     this.sendWidgetAction('hideLists');
-    DiscourseURL.routeTo(this.attrs.category.get('url'));
+    DiscourseURL.routeTo(categoryUrl);
+  }
+});
+
+createWidget('filter-list-item', {
+  tagName: 'li',
+
+  html(attrs) {
+    return h('span', attrs.filter);
+  },
+
+  click() {
+    this.sendWidgetAction('hideLists');
+    const path = this.attrs.path;
+    const hasFilter = path.indexOf('/l/') > -1;
+    const baseUrl = hasFilter ? path.split('/l/')[0] : path;
+    const newUrl = baseUrl + '/l/' + this.attrs.filter;
+    DiscourseURL.routeTo(newUrl);
   }
 });
 
@@ -21,13 +47,18 @@ export default createWidget('civically-path', {
 
   defaultState() {
     const categoriesList = this.site.get('categoriesList');
-    const parentCategories = categoriesList.filter(c => !c.get('parentCategory'));
+    const parentCategories = categoriesList.filter(c => {
+      const parentCategory = c.get('parentCategory');
+      const isUncategorizedCategory = c.get('isUncategorizedCategory');
+      return !parentCategory && !isUncategorizedCategory;
+    });
 
     let state = {
       categoriesList,
       parentCategories,
       parentList: false,
-      childList: false
+      childList: false,
+      filterList: false,
     };
 
     return state;
@@ -37,9 +68,9 @@ export default createWidget('civically-path', {
     return this.attach('link', {
       action: 'showList',
       actionParam: type,
-      title: name,
+      rawTitle: name,
       rawLabel: name,
-      className: 'list-title'
+      className: 'list-title p-link'
     });
   },
 
@@ -53,10 +84,12 @@ export default createWidget('civically-path', {
 
       if (parentCategory) {
         headerContents.push(this.buildTitle('parent', parentCategory.name));
+        headerContents.push(h('span', '>'));
         headerContents.push(this.buildTitle('child', category.name));
       } else {
         headerContents.push(this.buildTitle('parent', category.name));
         if (category.has_children) {
+          headerContents.push(h('span', '>'));
           const label = I18n.t('categories.all_subcategories', {categoryName: category.name});
           headerContents.push(this.buildTitle('child', label));
         }
@@ -65,12 +98,17 @@ export default createWidget('civically-path', {
       headerContents.push(this.buildTitle('parent', I18n.t('categories.all')));
     }
 
-    contents.push(h('div.widget-multi-title', headerContents));
+    const path = window.location.pathname;
+    const hasFilter = path.indexOf('/l/') > -1;
+    const filter = hasFilter ? path.split('/l/')[1] : 'latest';
+    headerContents.push(h('span', '>'));
+    headerContents.push(this.buildTitle('filter', filter));
 
+    contents.push(h('div.widget-multi-title', headerContents));
 
     if (state.parentList) {
       const parentCategories = state.parentCategories;
-      contents.push(this.buildList(parentCategories));
+      contents.push(this.buildCategoryList(parentCategories, true));
     }
 
     if (category && state.childList) {
@@ -79,7 +117,13 @@ export default createWidget('civically-path', {
       const childCategories = categoriesList.filter(c => {
         return c.get('parentCategory.id') === parentCategory.id;
       });
-      contents.push(this.buildList(childCategories));
+      contents.push(this.buildCategoryList(childCategories));
+    }
+
+    if (state.filterList) {
+      let filters = Array.from(new Set(this.site.get('filters')));
+      filters = filters.filter((f) => f !== 'map');
+      contents.push(this.buildFilterList(filters, path));
     }
 
     return contents;
@@ -87,20 +131,31 @@ export default createWidget('civically-path', {
 
   showList(type) {
     this.state[`${type}List`] = !this.state[`${type}List`];
-    const opposite = type === 'parent' ? 'child' : 'parent';
-    this.state[`${opposite}List`] = false;
+    ['parent', 'child', 'filter'].forEach((t) => {
+      if (t !== type) this.state[`${t}List`] = false;
+    });
     this.scheduleRerender();
   },
 
   hideLists() {
     this.state.parentList = false;
     this.state.childList = false;
+    this.state.filterList = false;
     this.scheduleRerender();
   },
 
-  buildList(categories) {
+  buildCategoryList(categories, parent) {
+    let notReachedPlace = true;
     return h('ul.category-dropdown', categories.map(category => {
-      return this.attach('category-list-item', { category });
+      const firstPlace = notReachedPlace && category.place && parent;
+      if (firstPlace) notReachedPlace = false;
+      return this.attach('category-list-item', { category, firstPlace });
+    }));
+  },
+
+  buildFilterList(filters, path) {
+    return h('ul.category-dropdown', filters.map(filter => {
+      return this.attach('filter-list-item', { filter, path });
     }));
   },
 

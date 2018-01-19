@@ -1,0 +1,4 @@
+plugins:
+  inline_list_navigation:
+    default: true
+    client: true
