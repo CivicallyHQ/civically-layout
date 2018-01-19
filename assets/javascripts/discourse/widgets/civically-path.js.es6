@@ -1,5 +1,6 @@
 import { createWidget } from 'discourse/widgets/widget';
 import DiscourseURL from 'discourse/lib/url';
+import Category from 'discourse/models/category';
 import { h } from 'virtual-dom';
 
 createWidget('category-list-item', {
@@ -7,8 +8,8 @@ createWidget('category-list-item', {
 
   buildClasses(attrs) {
     let classes = '';
-    if (attrs.firstPlace) {
-      classes += 'first-place';
+    if (attrs.addBorder) {
+      classes += 'add-border';
     }
     return classes;
   },
@@ -47,21 +48,34 @@ export default createWidget('civically-path', {
 
   defaultState() {
     const categoriesList = this.site.get('categoriesList');
+    const currentUser = this.currentUser;
+    const placeCategoryId = currentUser.place_category_id;
     const parentCategories = categoriesList.filter(c => {
-      const parentCategory = c.get('parentCategory');
+      const hasParent = c.get('parentCategory');
       const isUncategorizedCategory = c.get('isUncategorizedCategory');
-      return !parentCategory && !isUncategorizedCategory;
+      if (hasParent || isUncategorizedCategory) return false;
+
+      const isPlace = c.get('place');
+      if (isPlace) {
+        if (!placeCategoryId) return false;
+
+        const parentCategoryId = c.get('id');
+        const place = Category.findById(placeCategoryId);
+        return place.parent_category_id === parentCategoryId;
+      }
+
+      return true;
     });
 
-    let state = {
+    parentCategories.reverse();
+
+    return {
       categoriesList,
       parentCategories,
       parentList: false,
       childList: false,
       filterList: false,
     };
-
-    return state;
   },
 
   buildTitle(type, name) {
@@ -108,7 +122,7 @@ export default createWidget('civically-path', {
 
     if (state.parentList) {
       const parentCategories = state.parentCategories;
-      contents.push(this.buildCategoryList(parentCategories, true));
+      contents.push(this.buildCategoryList(parentCategories));
     }
 
     if (category && state.childList) {
@@ -117,6 +131,11 @@ export default createWidget('civically-path', {
       const childCategories = categoriesList.filter(c => {
         return c.get('parentCategory.id') === parentCategory.id;
       });
+      const placeCategoryId = this.currentUser.place_category_id;
+      if (placeCategoryId) {
+        const placeIndex = childCategories.findIndex(c => c.id === placeCategoryId);
+        childCategories.splice(0, 0, childCategories.splice(placeIndex, 1)[0]);
+      }
       contents.push(this.buildCategoryList(childCategories));
     }
 
@@ -144,12 +163,10 @@ export default createWidget('civically-path', {
     this.scheduleRerender();
   },
 
-  buildCategoryList(categories, parent) {
-    let notReachedPlace = true;
-    return h('ul.category-dropdown', categories.map(category => {
-      const firstPlace = notReachedPlace && category.place && parent;
-      if (firstPlace) notReachedPlace = false;
-      return this.attach('category-list-item', { category, firstPlace });
+  buildCategoryList(categories) {
+    return h('ul.category-dropdown', categories.map((category, index) => {
+      const addBorder = index === 0;
+      return this.attach('category-list-item', { category, addBorder });
     }));
   },
 

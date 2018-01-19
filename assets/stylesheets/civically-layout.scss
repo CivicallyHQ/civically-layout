@@ -315,8 +315,8 @@
       cursor: pointer;
       padding: 5px;
 
-      &.first-place {
-        border-top: 1px solid $primary-low;
+      &.add-border {
+        border-bottom: 1px solid $primary-low;
       }
 
       &:hover {
