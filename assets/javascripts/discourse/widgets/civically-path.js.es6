@@ -122,7 +122,8 @@ export default createWidget('civically-path', {
 
     if (state.parentList) {
       const parentCategories = state.parentCategories;
-      contents.push(this.buildCategoryList(parentCategories));
+      const userPlaceIsSet = Boolean(this.currentUser.place_category_id);
+      contents.push(this.buildCategoryList(parentCategories, userPlaceIsSet));
     }
 
     if (category && state.childList) {
@@ -136,7 +137,8 @@ export default createWidget('civically-path', {
         const placeIndex = childCategories.findIndex(c => c.id === placeCategoryId);
         childCategories.splice(0, 0, childCategories.splice(placeIndex, 1)[0]);
       }
-      contents.push(this.buildCategoryList(childCategories));
+      const parentIsPlace = parentCategory.get('place');
+      contents.push(this.buildCategoryList(childCategories, parentIsPlace));
     }
 
     if (state.filterList) {
@@ -163,9 +165,9 @@ export default createWidget('civically-path', {
     this.scheduleRerender();
   },
 
-  buildCategoryList(categories) {
+  buildCategoryList(categories, showBorder) {
     return h('ul.category-dropdown', categories.map((category, index) => {
-      const addBorder = index === 0;
+      const addBorder = index === 0 && showBorder;
       return this.attach('category-list-item', { category, addBorder });
     }));
   },
