@@ -239,7 +239,7 @@
 .main-content.has-sidebars div.container.list-container {
   border: none;
 
-  .discovery-title-composer {
+  .discovery-title-composer .title-composer:not(.hide-input) {
     border-left: 1px solid $primary-low;
     border-right: 1px solid $primary-low;
     border-top: 1px solid $primary-low;
@@ -334,6 +334,11 @@
       }
     }
   }
+}
+
+.discovery-title-composer.hide-input + .inline-list-navigation {
+  border-top: 1px solid $primary-low;
+  border-radius: 4px 4px 0 0;
 }
 
 .contents > .top-lists {
