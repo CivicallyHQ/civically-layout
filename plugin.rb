@@ -10,6 +10,7 @@ DiscourseEvent.on(:layouts_ready) do
   DiscourseLayouts::WidgetHelper.add_widget('civically-place', position: 'left', order: 'start')
   DiscourseLayouts::WidgetHelper.add_widget('civically-navigation', position: 'left', order: 'start')
   DiscourseLayouts::WidgetHelper.add_widget('civically-site', position: 'right', order: 'start')
+  DiscourseLayouts::WidgetHelper.add_widget('civically-checklist', position: 'right', order: 'start')
   SiteSetting.layouts_sidebar_left_enabled_global = true
   SiteSetting.layouts_sidebar_right_enabled_global = true
   SiteSetting.layouts_sidebar_user_selected_widgets = true
