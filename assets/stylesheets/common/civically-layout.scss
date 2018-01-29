@@ -134,7 +134,7 @@
   }
 }
 
-.map-category-search {
+.map-search {
   position: absolute;
   width: 130px;
   right: 35px;
@@ -172,7 +172,7 @@
     margin: 5px;
   }
 
-  #map-category-search-input {
+  #map-search-input {
     overflow: hidden;
     vertical-align: middle;
     width: calc(100% - 15px);
@@ -189,7 +189,7 @@
     }
   }
 
-  .nav-category-list {
+  .map-search-list {
     width: 100%;
     left: 0;
     list-style: none;
@@ -213,12 +213,12 @@
   }
 }
 
-.map.expanded .map-category-search {
+.map.expanded .map-search {
   top: 20px;
   right: 60px;
   width: 200px;
 
-  #map-category-search-input {
+  #map-search-input {
     height: 28px;
   }
 }

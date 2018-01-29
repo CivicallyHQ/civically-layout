@@ -12,17 +12,17 @@ export default createWidget('civically-navigation', {
 
   getLocations() {
     const categories = this.site.get('categories').filter((c) => c.place && c.place_can_join);
+
     let locations = categories.reduce((ls, c) => {
       if (c.location) {
         ls.push(c.location);
       };
       return ls;
     }, []);
-    const topic = this.attrs.topic;
-    const filter = 'c/petitions/place';
-    this.store.findFiltered('topicList', { filter }).then((list) => {
+
+    this.store.findFiltered('topicList', { filter: 'c/petitions/place' }).then((list) => {
       list.topics.forEach((t) => {
-        if ((!topic || t.id !== topic.id) && t.location) {
+        if (t.location) {
           locations.push(t.location);
         }
       });
@@ -46,7 +46,7 @@ export default createWidget('civically-navigation', {
       category,
       extraWidgets,
       showAvatar: false,
-      categorySearch: true,
+      search: true,
       locations: state.locations,
       runSetup: state.runSetup,
       zoom: 0
