@@ -56,8 +56,6 @@ export default createWidget('civically-navigation', {
 
     let contents = [
       this.attach('map', mapOpts)
-      // can add full navigation below map
-      // this.attach('civically-path', { category })
     ];
 
     if (attrs.editing) {
