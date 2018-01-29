@@ -4,7 +4,8 @@
 # authors: Angus McLeod
 # url: https://github.com/civicallyhq/civically-layout
 
-register_asset 'stylesheets/civically-layout.scss'
+register_asset 'stylesheets/common/civically-layout.scss'
+register_asset 'stylesheets/mobile/civically-layout.scss', :mobile
 
 DiscourseEvent.on(:layouts_ready) do
   DiscourseLayouts::WidgetHelper.add_widget('civically-place', position: 'left', order: 'start')
