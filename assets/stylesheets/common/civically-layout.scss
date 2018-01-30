@@ -366,3 +366,37 @@
 .footer-message {
   padding: 15px;
 }
+
+.widget-multi-title {
+  display: inline-block;
+
+  a.widget-link.list-title {
+    padding: 0 6px;
+    margin-right: 0;
+    text-decoration: none;
+    color: $primary;
+    position: relative;
+
+    &:first-of-type {
+      padding-left: 0;
+    }
+
+    &:last-of-type {
+      border-right: none;
+    }
+
+    &.active span {
+      @extend .p-link;
+    }
+
+    &.unread {
+      font-weight: 600;
+    }
+
+    a.badge {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+    }
+  }
+}
