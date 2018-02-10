@@ -304,8 +304,8 @@
   .list-title {
     font-size: 1em;
 
-    &+span {
-      padding: 0 5px;
+    span {
+      @extend .p-link;
     }
   }
 

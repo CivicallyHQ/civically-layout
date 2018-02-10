@@ -84,7 +84,7 @@ export default createWidget('civically-path', {
       actionParam: type,
       rawTitle: name,
       rawLabel: name,
-      className: 'list-title p-link'
+      className: 'list-title'
     });
   },
 
