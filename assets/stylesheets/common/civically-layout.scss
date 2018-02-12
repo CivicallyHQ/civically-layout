@@ -363,6 +363,14 @@
   }
 }
 
+.discovery.no-sidebars .inline-list-navigation {
+  border: none;
+
+  .civically-path {
+    padding: 10px 0;
+  }
+}
+
 .footer-message {
   padding: 15px;
 }
