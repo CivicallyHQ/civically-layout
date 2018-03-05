@@ -3,6 +3,10 @@ import DiscourseURL from 'discourse/lib/url';
 import Category from 'discourse/models/category';
 import { h } from 'virtual-dom';
 
+const formatFilter = function(filter) {
+  return filter.charAt(0).toUpperCase() + filter.slice(1);
+};
+
 createWidget('category-list-item', {
   tagName: 'li',
 
@@ -29,7 +33,7 @@ createWidget('filter-list-item', {
   tagName: 'li',
 
   html(attrs) {
-    return h('span', attrs.filter);
+    return h('span', formatFilter(attrs.filter));
   },
 
   click() {
@@ -116,7 +120,7 @@ export default createWidget('civically-path', {
     const hasFilter = path.indexOf('/l/') > -1;
     const filter = hasFilter ? path.split('/l/')[1] : 'latest';
     headerContents.push(h('span', '>'));
-    headerContents.push(this.buildTitle('filter', filter));
+    headerContents.push(this.buildTitle('filter', formatFilter(filter)));
 
     contents.push(h('div.widget-multi-title', headerContents));
 
