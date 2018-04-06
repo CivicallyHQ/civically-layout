@@ -1,4 +1,5 @@
 # name: civically-layout
+# app: internal
 # about: Handles layout and navigation for Civically
 # version: 0.1
 # authors: Angus McLeod
@@ -8,10 +9,6 @@ register_asset 'stylesheets/common/civically-layout.scss'
 register_asset 'stylesheets/mobile/civically-layout.scss', :mobile
 
 DiscourseEvent.on(:layouts_ready) do
-  DiscourseLayouts::WidgetHelper.add_widget('civically-place', position: 'left', order: 'start')
-  DiscourseLayouts::WidgetHelper.add_widget('civically-navigation', position: 'left', order: 'start')
-  DiscourseLayouts::WidgetHelper.add_widget('civically-site', position: 'right', order: 'start')
-  DiscourseLayouts::WidgetHelper.add_widget('civically-user', position: 'right', order: 'start')
   SiteSetting.layouts_sidebar_left_enabled_global = true
   SiteSetting.layouts_sidebar_right_enabled_global = true
   SiteSetting.layouts_sidebar_user_selected_widgets = true

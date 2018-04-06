@@ -39,9 +39,9 @@ createWidget('filter-list-item', {
   click() {
     this.sendWidgetAction('hideLists');
     const path = this.attrs.path;
-    const hasFilter = path.indexOf('/l/') > -1;
-    const baseUrl = hasFilter ? path.split('/l/')[0] : path;
-    const newUrl = baseUrl + '/l/' + this.attrs.filter;
+    const isCategory = path.indexOf('/c/') > -1;
+    const baseUrl = isCategory ? path.split('/l/')[0] + '/l/' : '/';
+    const newUrl = baseUrl + this.attrs.filter;
     DiscourseURL.routeTo(newUrl);
   }
 });
@@ -71,7 +71,8 @@ export default createWidget('civically-path', {
       return true;
     });
 
-    parentCategories.reverse();
+    const placeIndex = parentCategories.findIndex(c => c.get('place'));
+    parentCategories.splice(0, 0, parentCategories.splice(placeIndex, 1)[0]);
 
     return {
       categoriesList,
@@ -136,12 +137,15 @@ export default createWidget('civically-path', {
       const childCategories = categoriesList.filter(c => {
         return c.get('parentCategory.id') === parentCategory.id;
       });
+
       const placeCategoryId = this.currentUser.place_category_id;
       if (placeCategoryId) {
         const placeIndex = childCategories.findIndex(c => c.id === placeCategoryId);
         childCategories.splice(0, 0, childCategories.splice(placeIndex, 1)[0]);
       }
+
       const parentIsPlace = parentCategory.get('place');
+
       contents.push(this.buildCategoryList(childCategories, parentIsPlace));
     }
 

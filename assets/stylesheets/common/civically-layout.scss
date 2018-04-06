@@ -163,6 +163,10 @@
 
       .topic-list {
         margin: 0;
+
+        &>tbody {
+          border-top: 1px solid $primary-low;
+        }
       }
     }
 
@@ -195,6 +199,7 @@
 .inline-list-navigation {
   border-left: 1px solid $primary-low;
   border-right: 1px solid $primary-low;
+  padding-bottom: 10px;
 
   .civically-path {
     position: relative;

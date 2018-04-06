@@ -1,13 +1,14 @@
-import { createWidget } from 'discourse/widgets/widget';
+import { createAppWidget } from 'discourse/plugins/civically-app/discourse/widgets/app-widget';
 
-export default createWidget('civically-navigation', {
-  tagName: 'div.widget-container.nav-container',
-  buildKey: () => `civically-navigation`,
-
+export default createAppWidget('civically-navigation', {
   defaultState() {
     return {
       locations: null
     };
+  },
+
+  buildClasses() {
+    return 'nav-container';
   },
 
   getLocations() {
@@ -32,7 +33,7 @@ export default createWidget('civically-navigation', {
     });
   },
 
-  html(attrs, state) {
+  content(attrs, state) {
     const topic = attrs.topic;
     const category = attrs.category;
     const extraWidgets = [{ widget: 'place-about', attrs: { category }}];
@@ -68,5 +69,8 @@ export default createWidget('civically-navigation', {
     }
 
     return contents;
+  },
+
+  header() {
   }
 });

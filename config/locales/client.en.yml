@@ -1,5 +1,7 @@
 en:
   js:
-    category:
-      has_geojson: "Geojson enabled for this category"
-      geojson: "Geojson"
+    app:
+      civically_navigation:
+        title: "Map"
+        locked: "Become a member of a place to unlock the Map app."
+        icon: ":map:"
