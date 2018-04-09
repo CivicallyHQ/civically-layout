@@ -1,5 +1,5 @@
 # name: civically-navigation
-# app: internal
+# app: system
 # about: Handles layout and navigation for Civically
 # version: 0.1
 # authors: Angus McLeod

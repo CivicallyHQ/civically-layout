@@ -33,9 +33,9 @@ export default createAppWidget('civically-navigation', {
     });
   },
 
-  content(attrs, state) {
-    const topic = attrs.topic;
-    const category = attrs.category;
+  contents() {
+    const { topic, category, } = this.attrs;
+    const state = this.state;
     const extraWidgets = [{ widget: 'place-about', attrs: { category }}];
 
     if (!state.locations) {
@@ -55,22 +55,8 @@ export default createAppWidget('civically-navigation', {
 
     state.runSetup = false;
 
-    let contents = [
-      this.attach('map', mapOpts)
-    ];
-
-    if (attrs.editing) {
-      contents.push(this.attach('app-edit', {
-        side: attrs.side,
-        index: attrs.index,
-        name: 'civically-navigation',
-        pinned: true
-      }));
-    }
+    let contents = [ this.attach('map', mapOpts) ];
 
     return contents;
-  },
-
-  header() {
   }
 });
