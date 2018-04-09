@@ -1,12 +1,12 @@
-# name: civically-layout
+# name: civically-navigation
 # app: internal
 # about: Handles layout and navigation for Civically
 # version: 0.1
 # authors: Angus McLeod
-# url: https://github.com/civicallyhq/civically-layout
+# url: https://github.com/civicallyhq/civically-navigation
 
-register_asset 'stylesheets/common/civically-layout.scss'
-register_asset 'stylesheets/mobile/civically-layout.scss', :mobile
+register_asset 'stylesheets/common/civically-navigation.scss'
+register_asset 'stylesheets/mobile/civically-navigation.scss', :mobile
 
 DiscourseEvent.on(:layouts_ready) do
   SiteSetting.layouts_sidebar_left_enabled_global = true
@@ -19,10 +19,4 @@ end
 
 DiscourseEvent.on(:locations_ready) do
   SiteSetting.location_topic_map = false
-end
-
-after_initialize do
-  Category.register_custom_field_type('has_geojson', :boolean)
-  add_to_serializer(:basic_category, :has_geojson) { object.custom_fields["has_geojson"] }
-  add_to_serializer(:basic_category, :geojson) { object.custom_fields["geojson"] }
 end

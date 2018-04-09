@@ -1,4 +1,4 @@
-# Civically Layouts
+# Civically Navigation
 
 This is a Discourse plugin built for [Civically](https://civically.io).
 
@@ -8,7 +8,7 @@ For more details on the role of Discourse plugins in Civically see our [Discours
 
 ## Features and Functionality
 
-For more details on the current features of this plugin and the role it plays in Civically please see the [Civically Layouts topic](https://civically.io/t/civically-layouts).
+For more details on the current features of this plugin and the role it plays in Civically please see the [Civically Layouts topic](https://civically.io/t/civically-navigations).
 
 ## Contributing
 
