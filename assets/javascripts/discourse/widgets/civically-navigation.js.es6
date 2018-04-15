@@ -12,7 +12,9 @@ export default createAppWidget('civically-navigation', {
   },
 
   getLocations() {
-    const categories = this.site.get('categories').filter((c) => c.place && c.place_can_join);
+    const categories = this.site.get('categories').filter((c) => {
+      c.is_place && c.can_join
+    });
 
     let locations = categories.reduce((ls, c) => {
       if (c.location) {

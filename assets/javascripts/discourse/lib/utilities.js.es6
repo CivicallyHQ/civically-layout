@@ -2,8 +2,8 @@ import { ajax } from 'discourse/lib/ajax';
 import { h } from 'virtual-dom';
 
 const buildTitle = function(context, parent, type) {
-  const currentType = context.state.currentType;
-  const active = currentType === type;
+  const currentListType = context.state.currentListType;
+  const active = currentListType === type;
 
   let classes = 'list-title';
   if (active) classes += ' active';

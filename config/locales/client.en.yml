@@ -3,5 +3,5 @@ en:
     app:
       civically_navigation:
         title: "Map"
-        locked: "Become a member of a place to unlock the Map app."
+        locked: "Become a member of a place to unlock the Map App."
         icon: ":map:"
