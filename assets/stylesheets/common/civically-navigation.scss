@@ -134,60 +134,6 @@
   z-index: initial;
 }
 
-// overrides discourse-layouts css so election-banner is not included in topic-list border
-
-.main-content.has-sidebars div.container.list-container {
-  border: none;
-
-  .discovery-title-composer .title-composer:not(.hide-input) {
-    border-left: 1px solid $primary-low;
-    border-right: 1px solid $primary-low;
-    border-top: 1px solid $primary-low;
-    border-radius: 4px 4px 0 0;
-  }
-
-  #list-area {
-    .show-more.has-topics {
-      position: initial;
-      top: initial;
-      padding-top: 10px;
-
-      .alert {
-        margin-bottom: 0;
-      }
-    }
-
-    &> .contents {
-      border-left: 1px solid $primary-low;
-      border-right: 1px solid $primary-low;
-
-      .topic-list {
-        margin: 0;
-
-        &>tbody {
-          border-top: 1px solid $primary-low;
-        }
-      }
-    }
-
-    &> .topic-list-bottom {
-      margin: 0;
-      border-left: 1px solid $primary-low;
-      border-right: 1px solid $primary-low;
-      border-bottom: 1px solid $primary-low;
-      border-radius: 0 0 4px 4px;
-    }
-  }
-}
-
-.main-content.topic.has-sidebars #topic-title .container div.title-wrapper {
-  width: initial;
-
-  .topic-category {
-    margin-top: 0;
-  }
-}
-
 #list-area .top-lists h2 {
   font-size: 1.2em;
 }
@@ -197,6 +143,7 @@
 }
 
 .inline-list-navigation {
+  background-color: $secondary;
   border-left: 1px solid $primary-low;
   border-right: 1px solid $primary-low;
   padding-bottom: 10px;
@@ -210,7 +157,7 @@
     font-size: 1em;
 
     span {
-      @extend .p-link;
+      @extend a.p-link;
     }
   }
 
@@ -294,6 +241,7 @@
 
 .widget-multi-title {
   display: flex;
+  margin-bottom: 7px;
 
   a.widget-link.list-title {
     padding: 0 6px;
@@ -311,7 +259,7 @@
     }
 
     &.active span {
-      @extend .p-link;
+      @extend a.p-link;
     }
 
     &.unread {

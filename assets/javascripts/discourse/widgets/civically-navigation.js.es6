@@ -12,16 +12,9 @@ export default createAppWidget('civically-navigation', {
   },
 
   getLocations() {
-    const categories = this.site.get('categories').filter((c) => {
-      c.is_place && c.can_join
-    });
-
-    let locations = categories.reduce((ls, c) => {
-      if (c.location) {
-        ls.push(c.location);
-      };
-      return ls;
-    }, []);
+    const categories = this.site.get('categories')
+    const places = categories.filter((c) => c.is_place);
+    let locations = places.map((p) => p.location);
 
     this.store.findFiltered('topicList', { filter: 'c/petitions/place' }).then((list) => {
       list.topics.forEach((t) => {
@@ -37,10 +30,11 @@ export default createAppWidget('civically-navigation', {
 
   contents() {
     const { topic, category, } = this.attrs;
-    const state = this.state;
     const extraWidgets = [{ widget: 'place-about', attrs: { category }}];
+    const locations = this.state.locations;
+    const runSetup = this.state.runSetup;
 
-    if (!state.locations) {
+    if (!locations) {
       this.getLocations();
     }
 
@@ -50,12 +44,12 @@ export default createAppWidget('civically-navigation', {
       extraWidgets,
       showAvatar: false,
       search: true,
-      locations: state.locations,
-      runSetup: state.runSetup,
+      locations,
+      runSetup,
       zoom: 0
     };
 
-    state.runSetup = false;
+    this.state.runSetup = false;
 
     let contents = [ this.attach('map', mapOpts) ];
 

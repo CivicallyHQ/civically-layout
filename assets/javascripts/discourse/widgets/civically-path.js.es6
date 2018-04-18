@@ -12,20 +12,23 @@ createWidget('category-list-item', {
 
   buildClasses(attrs) {
     let classes = '';
-    if (attrs.addBorder) {
-      classes += 'add-border';
-    }
+    if (attrs.addBorder) classes += 'add-border';
     return classes;
   },
 
   html(attrs) {
-    return h('span', attrs.category.name);
+    const category = this.attrs.category;
+    const label = category ? category.get('name') : this.attrs.label;
+    return h('span', label);
   },
 
   click() {
-    const categoryUrl = this.attrs.category.get('url');
+    const category = this.attrs.category;
+    const url = category ? category.get('url') : this.attrs.url;
+
     this.sendWidgetAction('hideLists');
-    DiscourseURL.routeTo(categoryUrl);
+
+    DiscourseURL.routeTo(url);
   }
 });
 
@@ -59,7 +62,7 @@ export default createWidget('civically-path', {
       const isUncategorizedCategory = c.get('isUncategorizedCategory');
       if (hasParent || isUncategorizedCategory) return false;
 
-      const isPlace = c.get('place');
+      const isPlace = c.get('is_place');
       if (isPlace) {
         if (!placeCategoryId) return false;
 
@@ -71,7 +74,7 @@ export default createWidget('civically-path', {
       return true;
     });
 
-    const placeIndex = parentCategories.findIndex(c => c.get('place'));
+    const placeIndex = parentCategories.findIndex(c => c.get('is_place'));
     parentCategories.splice(0, 0, parentCategories.splice(placeIndex, 1)[0]);
 
     return {
@@ -107,9 +110,10 @@ export default createWidget('civically-path', {
         headerContents.push(this.buildTitle('child', category.name));
       } else {
         headerContents.push(this.buildTitle('parent', category.name));
-        if (category.has_children) {
+
+        if (category.is_place || category.has_children) {
           headerContents.push(h('span', '>'));
-          const label = I18n.t('categories.all_subcategories', {categoryName: category.name});
+          const label = I18n.t('categories.all_subcategories', { categoryName: category.name });
           headerContents.push(this.buildTitle('child', label));
         }
       }
@@ -146,7 +150,7 @@ export default createWidget('civically-path', {
 
       const parentIsPlace = parentCategory.get('place');
 
-      contents.push(this.buildCategoryList(childCategories, parentIsPlace));
+      contents.push(this.buildCategoryList(childCategories, parentIsPlace, parentCategory));
     }
 
     if (state.filterList) {
@@ -173,11 +177,20 @@ export default createWidget('civically-path', {
     this.scheduleRerender();
   },
 
-  buildCategoryList(categories, showBorder) {
-    return h('ul.category-dropdown', categories.map((category, index) => {
+  buildCategoryList(categories, showBorder, parentCategory = null) {
+    let list = categories.map((category, index) => {
       const addBorder = index === 0 && showBorder;
       return this.attach('category-list-item', { category, addBorder });
-    }));
+    });
+
+    if (parentCategory) {
+      list.unshift(this.attach('category-list-item', {
+        label: I18n.t('categories.all_subcategories', { categoryName: parentCategory.name }),
+        url: parentCategory.get('url')
+      }));
+    }
+
+    return h('ul.category-dropdown', list);
   },
 
   buildFilterList(filters, path) {
