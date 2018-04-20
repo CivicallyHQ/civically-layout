@@ -11,7 +11,6 @@ register_asset 'stylesheets/mobile/civically-navigation.scss', :mobile
 DiscourseEvent.on(:layouts_ready) do
   SiteSetting.layouts_sidebar_left_enabled_global = true
   SiteSetting.layouts_sidebar_right_enabled_global = true
-  SiteSetting.layouts_sidebar_user_selected_widgets = true
   SiteSetting.layouts_list_navigation_disabled_global = true
   SiteSetting.layouts_list_header_disabled_global = true
   SiteSetting.layouts_mobile_enabled = true
