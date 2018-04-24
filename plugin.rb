@@ -13,7 +13,10 @@ DiscourseEvent.on(:layouts_ready) do
   SiteSetting.layouts_sidebar_right_enabled_global = true
   SiteSetting.layouts_list_navigation_disabled_global = true
   SiteSetting.layouts_list_header_disabled_global = true
+  SiteSetting.layouts_hide_sidebars_if_empty = true
   SiteSetting.layouts_mobile_enabled = true
+  SiteSetting.layouts_sidebar_left_fixed = false
+  SiteSetting.layouts_sidebar_right_fixed = false
 end
 
 DiscourseEvent.on(:locations_ready) do

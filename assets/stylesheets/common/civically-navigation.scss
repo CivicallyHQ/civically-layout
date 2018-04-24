@@ -127,7 +127,7 @@
   position: fixed !important;
   bottom: 0 !important;
   right: 20% !important;
-  z-index: 1;
+  z-index: 99;
 }
 
 .topic-avatar {
@@ -150,7 +150,7 @@
 
   .civically-path {
     position: relative;
-    padding: 8px 12px 4px 12px;
+    padding: 8px 15px 4px 15px;
   }
 
   .list-title {
@@ -233,6 +233,19 @@
       }
     }
   }
+}
+
+.main-content.loading {
+  max-width: 680px;
+  margin: 0 10px 0 0 !important;
+}
+
+.main-content.has-sidebars {
+  max-width: 680px;
+}
+
+aside.sidebar {
+  margin-bottom: 100px;
 }
 
 .footer-message {
