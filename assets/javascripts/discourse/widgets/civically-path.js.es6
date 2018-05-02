@@ -1,6 +1,8 @@
 import { createWidget } from 'discourse/widgets/widget';
 import DiscourseURL from 'discourse/lib/url';
 import Category from 'discourse/models/category';
+import { getOwner } from 'discourse-common/lib/get-owner';
+import { categoryTagPath } from '../lib/utilities';
 import { h } from 'virtual-dom';
 
 const formatFilter = function(filter) {
@@ -49,6 +51,26 @@ createWidget('filter-list-item', {
   }
 });
 
+createWidget('tag-list-item', {
+  tagName: 'li',
+
+  html(attrs) {
+    return h('span', attrs.tagId);
+  },
+
+  click() {
+    this.sendWidgetAction('hideLists');
+    const category = this.attrs.category;
+    const filter = this.attrs.filter;
+    const tagId = this.attrs.tagId;
+    const tagPath = categoryTagPath(tagId, { category });
+
+    let url = filter ? tagPath + '/l/' + filter : tagPath;
+
+    DiscourseURL.routeTo(url);
+  }
+});
+
 export default createWidget('civically-path', {
   tagName: 'div.civically-path',
   buildKey: () => 'civically-path',
@@ -83,6 +105,7 @@ export default createWidget('civically-path', {
       parentList: false,
       childList: false,
       filterList: false,
+      tagList: false
     };
   },
 
@@ -92,47 +115,53 @@ export default createWidget('civically-path', {
       actionParam: type,
       rawTitle: name,
       rawLabel: name,
-      className: 'list-title'
+      className: `list-title ${name}`
     });
   },
 
   html(attrs, state) {
-    const category = attrs.category;
+    const path = window.location.pathname;
+
+    let category = attrs.category;
     let contents = [];
-    let headerContents = [];
+    let tag = null;
+    let tags = null;
+    let tagsRoute = path.indexOf('/tags/') > -1;
+    let tagLists = [];
+
+    // to fix: make pr to core to add category and tag to discovery-list-container-top outlet in tags
+    if (tagsRoute) {
+      const tagsController = getOwner(this).lookup('controller:tags-show');
+      category = tagsController.get('category');
+      tag = tagsController.get('tag');
+    }
+
+    let categoryLists = [];
 
     if (category) {
       const parentCategory = category.get('parentCategory');
 
       if (parentCategory) {
-        headerContents.push(this.buildTitle('parent', parentCategory.name));
-        headerContents.push(h('span', '>'));
-        headerContents.push(this.buildTitle('child', category.name));
+        categoryLists.push(this.buildTitle('parent', parentCategory.name));
+        categoryLists.push(h('span', '>'));
+        categoryLists.push(this.buildTitle('child', category.name));
       } else {
-        headerContents.push(this.buildTitle('parent', category.name));
+        categoryLists.push(this.buildTitle('parent', category.name));
 
         if (category.is_place || category.has_children) {
-          headerContents.push(h('span', '>'));
+          categoryLists.push(h('span', '>'));
           const label = I18n.t('categories.all_subcategories', { categoryName: category.name });
-          headerContents.push(this.buildTitle('child', label));
+          categoryLists.push(this.buildTitle('child', label));
         }
       }
     } else {
-      headerContents.push(this.buildTitle('parent', I18n.t('categories.all')));
+      categoryLists.push(this.buildTitle('parent', I18n.t('categories.all')));
     }
-
-    const path = window.location.pathname;
-    const hasFilter = path.indexOf('/l/') > -1;
-    const filter = hasFilter ? path.split('/l/')[1] : 'latest';
-    headerContents.push(h('span', '>'));
-    headerContents.push(this.buildTitle('filter', formatFilter(filter)));
-
-    contents.push(h('div.widget-multi-title', headerContents));
 
     if (state.parentList) {
       const parentCategories = state.parentCategories;
       const userPlaceIsSet = Boolean(this.currentUser.place_category_id);
-      contents.push(this.buildCategoryList(parentCategories, userPlaceIsSet));
+      categoryLists.push(this.buildCategoryList(parentCategories, userPlaceIsSet));
     }
 
     if (category && state.childList) {
@@ -150,21 +179,42 @@ export default createWidget('civically-path', {
 
       const parentIsPlace = parentCategory.get('place');
 
-      contents.push(this.buildCategoryList(childCategories, parentIsPlace, parentCategory));
+      categoryLists.push(this.buildCategoryList(childCategories, parentIsPlace, parentCategory));
     }
+
+    contents.push(h('span.category-lists', categoryLists));
+
+    let filterLists = [];
+
+    const hasFilter = path.indexOf('/l/') > -1;
+    const filter = hasFilter ? path.split('/l/')[1] : 'latest';
+    filterLists.push(h('span', '>'));
+    filterLists.push(this.buildTitle('filter', formatFilter(filter)));
 
     if (state.filterList) {
       let filters = Array.from(new Set(this.site.get('filters')));
       filters = filters.filter((f) => f !== 'map');
-      contents.push(this.buildFilterList(filters, path));
+      filterLists.push(this.buildFilterList(filters, path));
     }
 
-    return contents;
+    contents.push(h('span.filter-lists', filterLists));
+
+    let label = tag ? tag.get('id') : I18n.t('tagging.selector_all_tags');
+    tagLists.push(this.buildTitle('tag', label));
+
+    if (state.tagList) {
+      const tags = this.site.top_tags;
+      tagLists.push(this.buildTagList(tags, category, filter));
+    }
+
+    contents.push(h('span.tag-lists', tagLists));
+
+    return h('div.widget-multi-title', contents);
   },
 
   showList(type) {
     this.state[`${type}List`] = !this.state[`${type}List`];
-    ['parent', 'child', 'filter'].forEach((t) => {
+    ['parent', 'child', 'filter', 'tag'].forEach((t) => {
       if (t !== type) this.state[`${t}List`] = false;
     });
     this.scheduleRerender();
@@ -174,6 +224,7 @@ export default createWidget('civically-path', {
     this.state.parentList = false;
     this.state.childList = false;
     this.state.filterList = false;
+    this.state.tagList = false;
     this.scheduleRerender();
   },
 
@@ -190,13 +241,30 @@ export default createWidget('civically-path', {
       }));
     }
 
-    return h('ul.category-dropdown', list);
+    return h('ul.nav-dropdown', list);
   },
 
   buildFilterList(filters, path) {
-    return h('ul.category-dropdown', filters.map(filter => {
+    return h('ul.nav-dropdown', filters.map(filter => {
       return this.attach('filter-list-item', { filter, path });
     }));
+  },
+
+  buildTagList(tags, category, filter) {
+
+    const catUrl = category.get('url');
+    let allUrl = filter ? catUrl + '/l/' + filter : catUrl
+
+    let list = [this.attach('category-list-item', {
+      label: I18n.t('tagging.selector_all_tags'),
+      url: allUrl
+    })];
+
+    list.push(...tags.map(tagId => {
+      return this.attach('tag-list-item', { tagId, category, filter });
+    }));
+
+    return h('ul.nav-dropdown', list);
   },
 
   click() {
