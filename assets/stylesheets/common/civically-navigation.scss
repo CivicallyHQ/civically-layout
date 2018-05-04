@@ -240,14 +240,10 @@ div.inline-list-navigation .widget-multi-title {
     padding: 10px 0;
 
     .widget-multi-title {
-      font-size: 1.5em;
 
       .list-title {
+        font-size: 1.5em;
         padding: 0 8px;
-
-        &:first-of-type {
-          padding-left: 0;
-        }
       }
     }
   }
