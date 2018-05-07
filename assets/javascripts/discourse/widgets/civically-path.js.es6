@@ -252,6 +252,8 @@ export default createWidget('civically-path', {
 
   buildTagList(tags, category, filter) {
 
+    if (!tags || !tags.length) return null;
+
     const catUrl = category.get('url');
     let allUrl = filter ? catUrl + '/l/' + filter : catUrl
 
