@@ -159,8 +159,6 @@ div.inline-list-navigation .widget-multi-title {
   }
 
   .tag-lists {
-    margin-left: auto;
-
     .nav-dropdown {
       left: initial;
       right: 0;
@@ -172,11 +170,60 @@ div.inline-list-navigation .widget-multi-title {
   background-color: $secondary;
   border-left: 1px solid $primary-low;
   border-right: 1px solid $primary-low;
-  padding-bottom: 10px;
 
   .civically-path {
     position: relative;
-    padding: 8px 15px 4px 15px;
+    padding: 10px 15px;
+
+    &.hide-nav {
+      cursor: pointer;
+    }
+
+    .widget-multi-title {
+      margin-bottom: 0;
+    }
+
+    .display-controls {
+      margin-left: auto;
+      position: relative;
+      display: flex;
+      align-items: center;
+
+      .spinner {
+        width: 4px;
+        height: 4px;
+        margin: 0;
+      }
+
+      > a {
+        color: $primary-medium;
+        font-size: 0.9em;
+        margin-left: 7px;
+
+        &:hover {
+          color: $primary;
+        }
+      }
+
+      i.check {
+        color: $success;
+      }
+
+      .tip {
+        position: absolute;
+        right: 0;
+        width: 250px;
+        top: -60px;
+        padding: 5px 8px;
+        background-color: $secondary;
+        box-shadow: shadow('card');
+        border: 1px solid $primary-low;
+
+        p {
+          margin: 0;
+        }
+      }
+    }
   }
 
   .nav-dropdown {
@@ -274,10 +321,6 @@ aside.sidebar {
 .widget-multi-title {
   display: flex;
   margin-bottom: 7px;
-
-  &.tag-lists {
-    margin-left: auto;
-  }
 
   a.widget-link.list-title {
     padding: 0 6px;

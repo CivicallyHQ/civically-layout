@@ -5,3 +5,11 @@ en:
         title: "Map"
         locked: "Become a member of a place to unlock the Map App."
         icon: ":map:"
+
+    user:
+      navigation:
+        title: "Navgiation"
+        show: "Filters"
+        pin:
+          tip: "Navigation Pinned. You can change this back in your [interface preferences](/my/preferences/interface)."
+          description: "Pin list navigation."

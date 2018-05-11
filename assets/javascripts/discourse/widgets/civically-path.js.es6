@@ -1,8 +1,13 @@
 import { createWidget } from 'discourse/widgets/widget';
 import DiscourseURL from 'discourse/lib/url';
 import Category from 'discourse/models/category';
+import RawHtml from 'discourse/widgets/raw-html';
 import { getOwner } from 'discourse-common/lib/get-owner';
+import { popupAjaxError } from 'discourse/lib/ajax-error';
 import { categoryTagPath } from '../lib/utilities';
+import { iconNode } from 'discourse-common/lib/icon-library';
+import { ajax } from 'discourse/lib/ajax';
+import { cook } from 'discourse/lib/text';
 import { h } from 'virtual-dom';
 
 const formatFilter = function(filter) {
@@ -99,13 +104,19 @@ export default createWidget('civically-path', {
     const placeIndex = parentCategories.findIndex(c => c.get('is_place'));
     parentCategories.splice(0, 0, parentCategories.splice(placeIndex, 1)[0]);
 
+    console.log(currentUser)
+
     return {
       categoriesList,
       parentCategories,
       parentList: false,
       childList: false,
       filterList: false,
-      tagList: false
+      tagList: false,
+      show: currentUser.pin_nav,
+      pinned: currentUser.pin_nav,
+      pinSuccess: false,
+      pinning: false
     };
   },
 
@@ -119,13 +130,50 @@ export default createWidget('civically-path', {
     });
   },
 
+  buildClasses() {
+    let classes = '';
+    const show = this.state.show;
+    if (!show) classes += ' hide-nav';
+    return classes;
+  },
+
+  pin() {
+    this.state.pinning = true;
+    this.scheduleRerender();
+
+    ajax('/navigation/pin-nav', {
+      type: "PUT",
+      data: {
+        state: !this.state.pinned
+      }
+    }).catch(popupAjaxError).then((result) => {
+      if (result.success) {
+        this.state.pinSuccess = true;
+        this.state.pinned = !this.state.pinned;
+        Discourse.User.currentProp('pin_nav', true);
+      }
+    }).finally(() => {
+      this.state.pinning = false;
+      this.scheduleRerender();
+    });
+  },
+
+  hide() {
+    this.state.show = false;
+    this.scheduleRerender();
+  },
+
   html(attrs, state) {
+
+    if (!state.pinned && !state.show) {
+      return h('span.show-nav', I18n.t('user.navigation.show'));
+    }
+
     const path = window.location.pathname;
 
     let category = attrs.category;
     let contents = [];
     let tag = null;
-    let tags = null;
     let tagsRoute = path.indexOf('/tags/') > -1;
     let tagLists = [];
 
@@ -199,15 +247,49 @@ export default createWidget('civically-path', {
 
     contents.push(h('span.filter-lists', filterLists));
 
-    let label = tag ? tag.get('id') : I18n.t('tagging.selector_all_tags');
-    tagLists.push(this.buildTitle('tag', label));
+    const tags = this.site.top_tags;
 
-    if (state.tagList) {
-      const tags = this.site.top_tags;
-      tagLists.push(this.buildTagList(tags, category, filter));
+    if (tags) {
+      let label = tag ? tag.get('id') : I18n.t('tagging.selector_all_tags');
+      tagLists.push(h('span', '>'));
+      tagLists.push(this.buildTitle('tag', label));
+
+      if (state.tagList) {
+        tagLists.push(this.buildTagList(tags, category, filter));
+      }
+
+      contents.push(h('span.tag-lists', tagLists));
     }
 
-    contents.push(h('span.tag-lists', tagLists));
+    let displayControls = [];
+
+    if (state.pinning) {
+      displayControls.push(h('div.spinner'));
+    } else if (state.pinSuccess) {
+      const html = cook(I18n.t('user.navigation.pin.tip'));
+      const tip = new RawHtml({ html: html.string });
+      displayControls.push([
+        iconNode('check'),
+        h('span.tip', tip)
+      ]);
+    }
+
+    if (!state.pinned && !state.pinning) {
+      displayControls.push(...[
+        this.attach('link', {
+          action: "pin",
+          className: 'pin-nav',
+          icon: 'thumb-tack'
+        }),
+        this.attach('link', {
+          action: "hide",
+          className: 'hide-nav',
+          icon: 'times'
+        })
+      ]);
+    }
+
+    contents.push(h('span.display-controls', displayControls));
 
     return h('div.widget-multi-title', contents);
   },
@@ -269,11 +351,25 @@ export default createWidget('civically-path', {
     return h('ul.nav-dropdown', list);
   },
 
+  closeTip() {
+    if (this.state.pinSuccess) {
+      this.state.pinSuccess = false;
+      this.scheduleRerender();
+    }
+  },
+
   click() {
-    this.hideLists();
+    if (this.state.show) {
+      this.hideLists();
+    } else {
+      this.state.show = true;
+      this.scheduleRerender();
+    }
+    this.closeTip();
   },
 
   clickOutside() {
     this.hideLists();
+    this.closeTip();
   }
 });
