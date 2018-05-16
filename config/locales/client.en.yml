@@ -9,7 +9,12 @@ en:
     user:
       navigation:
         title: "Navgiation"
-        show: "Filters"
+        show:
+          label: "Navigation"
+          title: "Show Navigation"
+        hide:
+          title: "Hide Navigation"
         pin:
+          title: "Pin Navigation"
           tip: "Navigation Pinned. You can change this back in your [interface preferences](/my/preferences/interface)."
           description: "Pin list navigation."

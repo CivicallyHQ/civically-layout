@@ -174,9 +174,17 @@ div.inline-list-navigation .widget-multi-title {
   .civically-path {
     position: relative;
     padding: 10px 15px;
+    line-height: 20px;
 
-    &.hide-nav {
-      cursor: pointer;
+    .show-nav {
+      background-color: $secondary;
+      color: $primary-medium;
+      padding: 0;
+      margin-left: 2px;
+
+      &:hover {
+        color: $primary;
+      }
     }
 
     .widget-multi-title {
@@ -302,6 +310,10 @@ div.inline-list-navigation .widget-multi-title {
 
 .main-content.has-sidebars {
   max-width: 680px;
+
+  #share-link {
+    left: 300px !important;
+  }
 }
 
 .main-content.tags {
@@ -350,5 +362,15 @@ aside.sidebar {
       top: -8px;
       right: -8px;
     }
+  }
+}
+
+.main-content .topic-list {
+  td:first-of-type {
+    padding-left: 15px;
+  }
+
+  td:last-of-type {
+    padding-right: 15px;
   }
 }

@@ -1,3 +1,5 @@
 {{#if siteSettings.inline_list_navigation}}
-  {{list-navigation category=category loading=listLoading context=context}}
+  {{#if currentUser}}
+    {{list-navigation category=category loading=listLoading context=context}}
+  {{/if}}
 {{/if}}

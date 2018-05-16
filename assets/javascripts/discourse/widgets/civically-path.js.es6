@@ -104,8 +104,6 @@ export default createWidget('civically-path', {
     const placeIndex = parentCategories.findIndex(c => c.get('is_place'));
     parentCategories.splice(0, 0, parentCategories.splice(placeIndex, 1)[0]);
 
-    console.log(currentUser)
-
     return {
       categoriesList,
       parentCategories,
@@ -133,7 +131,7 @@ export default createWidget('civically-path', {
   buildClasses() {
     let classes = '';
     const show = this.state.show;
-    if (!show) classes += ' hide-nav';
+    if (!show) classes += ' nav-hidden';
     return classes;
   },
 
@@ -158,6 +156,11 @@ export default createWidget('civically-path', {
     });
   },
 
+  show() {
+    this.state.show = true;
+    this.scheduleRerender();
+  },
+
   hide() {
     this.state.show = false;
     this.scheduleRerender();
@@ -166,7 +169,12 @@ export default createWidget('civically-path', {
   html(attrs, state) {
 
     if (!state.pinned && !state.show) {
-      return h('span.show-nav', I18n.t('user.navigation.show'));
+      return this.attach('button', {
+        className: 'show-nav',
+        icon: 'list',
+        title: 'user.navigation.show.title',
+        action: 'show'
+      });
     }
 
     const path = window.location.pathname;
@@ -279,12 +287,14 @@ export default createWidget('civically-path', {
         this.attach('link', {
           action: "pin",
           className: 'pin-nav',
-          icon: 'thumb-tack'
+          icon: 'thumb-tack',
+          title: 'user.navigation.pin.title'
         }),
         this.attach('link', {
           action: "hide",
           className: 'hide-nav',
-          icon: 'times'
+          icon: 'times',
+          title: 'user.navigation.hide.title'
         })
       ]);
     }
@@ -358,13 +368,13 @@ export default createWidget('civically-path', {
     }
   },
 
+
+
   click() {
     if (this.state.show) {
       this.hideLists();
-    } else {
-      this.state.show = true;
-      this.scheduleRerender();
     }
+
     this.closeTip();
   },
 

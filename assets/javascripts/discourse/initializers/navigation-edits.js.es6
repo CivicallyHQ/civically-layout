@@ -1,5 +1,6 @@
 import { withPluginApi } from 'discourse/lib/plugin-api';
 import { placeUrl } from 'discourse/plugins/civically-place/discourse/lib/place-utilities';
+import { default as computed } from 'ember-addons/ember-computed-decorators';
 
 export default {
   name: 'navigation-edits',
@@ -13,6 +14,17 @@ export default {
           this.replaceWith(placeUrl(currentUser));
         }
       });
-    })
+
+      api.modifyClass('controller:discovery', {
+        @computed('path')
+        forceSidebars(path) {
+          return path.indexOf('calendar') === -1;
+        }
+      });
+
+      api.modifyClass('controller:topic', {
+        forceSidebars: true
+      })
+    });
   }
 }
