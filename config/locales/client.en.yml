@@ -16,5 +16,5 @@ en:
           title: "Hide Navigation"
         pin:
           title: "Pin Navigation"
-          tip: "Navigation Pinned. You can change this back in your [interface preferences](/my/preferences/interface)."
+          tip: "Navigation Pinned. Change this in your [interface preferences](/my/preferences/interface)."
           description: "Pin list navigation."
