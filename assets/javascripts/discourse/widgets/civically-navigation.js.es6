@@ -1,4 +1,5 @@
 import { createAppWidget } from 'discourse/plugins/civically-app/discourse/widgets/app-widget';
+import Category from 'discourse/models/category';
 
 export default createAppWidget('civically-navigation', {
   defaultState() {
@@ -12,11 +13,13 @@ export default createAppWidget('civically-navigation', {
   },
 
   getLocations() {
-    const categories = this.site.get('categories')
+    const categories = this.site.get('categories');
     const places = categories.filter((c) => c.is_place);
     let locations = places.map((p) => p.location);
 
-    this.store.findFiltered('topicList', { filter: 'c/petitions/place' }).then((list) => {
+    const category = this.attrs.category;
+    const filter = 'c/' + Category.slugFor(category) + '/l/petitions';
+    this.store.findFiltered('topicList', { filter }).then((list) => {
       list.topics.forEach((t) => {
         if (t.location) {
           locations.push(t.location);

@@ -81,34 +81,32 @@ export default createWidget('civically-path', {
   buildKey: () => 'civically-path',
 
   defaultState() {
-    const categoriesList = this.site.get('categoriesList');
+    const allCategories = this.site.get('categoriesList');
     const currentUser = this.currentUser;
-    const placeCategoryId = currentUser.place_category_id;
-    const parentCategories = categoriesList.filter(c => {
-      const hasParent = c.get('parentCategory');
-      const isUncategorizedCategory = c.get('isUncategorizedCategory');
-      if (hasParent || isUncategorizedCategory) return false;
 
-      const isPlace = c.get('is_place');
-      if (isPlace) {
-        if (!placeCategoryId) return false;
+    let town;
+    if (currentUser.town_category_id) {
+      town = Category.findById(currentUser.town_category_id);
+    }
 
-        const parentCategoryId = c.get('id');
-        const place = Category.findById(placeCategoryId);
-        return place.parent_category_id === parentCategoryId;
+    const firstCategories = allCategories.filter(c => {
+      if (c.get('parentCategory') || c.get('isUncategorizedCategory')) return false;
+      if (c.get('is_place')) {
+        return town && town.parent_category_id === c.get('id');
+      } else {
+        return true;
       }
-
-      return true;
     });
 
-    const placeIndex = parentCategories.findIndex(c => c.get('is_place'));
-    parentCategories.splice(0, 0, parentCategories.splice(placeIndex, 1)[0]);
+    let firstIndex = firstCategories.findIndex(c => c.get('is_place'));
+    firstCategories.splice(0, 0, firstCategories.splice(firstIndex, 1)[0]);
 
     return {
-      categoriesList,
-      parentCategories,
-      parentList: false,
-      childList: false,
+      allCategories,
+      firstCategories,
+      firstList: false,
+      secondList: false,
+      thirdList: false,
       filterList: false,
       tagList: false,
       show: currentUser.pin_nav,
@@ -167,6 +165,9 @@ export default createWidget('civically-path', {
   },
 
   html(attrs, state) {
+    const user = this.currentUser;
+    const townId = user.town_category_id;
+    const neighbourhoodId = user.neighbourhood_category_id;
 
     if (!state.pinned && !state.show) {
       return this.attach('button', {
@@ -178,64 +179,82 @@ export default createWidget('civically-path', {
     }
 
     const path = window.location.pathname;
+    const allCategories = state.allCategories;
 
-    let category = attrs.category;
-    let contents = [];
-    let tag = null;
-    let tagsRoute = path.indexOf('/tags/') > -1;
-    let tagLists = [];
+    const category = attrs.category;
+    const tag = attrs.tag;
 
-    // to fix: make pr to core to add category and tag to discovery-list-container-top outlet in tags
-    if (tagsRoute) {
-      const tagsController = getOwner(this).lookup('controller:tags-show');
-      category = tagsController.get('category');
-      tag = tagsController.get('tag');
-    }
-
-    let categoryLists = [];
+    let parentCategory;
+    let grandparentCategory;
 
     if (category) {
-      const parentCategory = category.get('parentCategory');
+      parentCategory =  category.get('parentCategory');
 
       if (parentCategory) {
-        categoryLists.push(this.buildTitle('parent', parentCategory.name));
-        categoryLists.push(h('span', '>'));
-        categoryLists.push(this.buildTitle('child', category.name));
-      } else {
-        categoryLists.push(this.buildTitle('parent', category.name));
+        grandparentCategory = parentCategory.get('parentCategory');
+      }
+    }
 
-        if (category.is_place || category.has_children) {
+    let first = grandparentCategory ? grandparentCategory : parentCategory ? parentCategory : category;
+    let second = grandparentCategory ? parentCategory : first === parentCategory ? category : null;
+    let third = grandparentCategory ? category : null;
+
+    let firstIsPlace = first && first.is_place;
+    let contents = [];
+    let tagLists = [];
+    let categoryLists = [];
+
+    if (first) {
+      categoryLists.push(this.buildTitle('first', first.name));
+
+      if (second) {
+        categoryLists.push(h('span', '>'));
+        categoryLists.push(this.buildTitle('second', second.name));
+
+        if (third) {
           categoryLists.push(h('span', '>'));
-          const label = I18n.t('categories.all_subcategories', { categoryName: category.name });
-          categoryLists.push(this.buildTitle('child', label));
+          categoryLists.push(this.buildTitle('third', third.name));
+        } else if (second.has_children) {
+          categoryLists.push(h('span', '>'));
+          categoryLists.push(this.buildTitle('third', I18n.t('categories.all_subcategories', {
+            categoryName: second.name
+          })));
         }
+      } else if (category.is_place || category.has_children) {
+        categoryLists.push(h('span', '>'));
+        categoryLists.push(this.buildTitle('second', I18n.t('categories.all_subcategories', {
+          categoryName: first.name
+        })));
       }
     } else {
-      categoryLists.push(this.buildTitle('parent', I18n.t('categories.all')));
+      categoryLists.push(this.buildTitle('first', I18n.t('categories.all')));
     }
 
-    if (state.parentList) {
-      const parentCategories = state.parentCategories;
-      const userPlaceIsSet = Boolean(this.currentUser.place_category_id);
-      categoryLists.push(this.buildCategoryList(parentCategories, userPlaceIsSet));
+    if (state.firstList) {
+      const firstCategories = state.firstCategories;
+      categoryLists.push(this.buildCategoryList(firstCategories, firstIsPlace));
     }
 
-    if (category && state.childList) {
-      const parentCategory = category.get('parentCategory') || category;
-      const categoriesList = state.categoriesList;
-      const childCategories = categoriesList.filter(c => {
-        return c.get('parentCategory.id') === parentCategory.id;
-      });
+    if (state.secondList) {
+      const secondCategories = allCategories.filter(c => c.get('parentCategory.id') === first.id);
 
-      const placeCategoryId = this.currentUser.place_category_id;
-      if (placeCategoryId) {
-        const placeIndex = childCategories.findIndex(c => c.id === placeCategoryId);
-        childCategories.splice(0, 0, childCategories.splice(placeIndex, 1)[0]);
+      if (firstIsPlace && townId) {
+        let townIndex = secondCategories.findIndex(c => c.id === townId);
+        secondCategories.splice(0, 0, secondCategories.splice(townIndex, 1)[0]);
       }
 
-      const parentIsPlace = parentCategory.get('place');
+      categoryLists.push(this.buildCategoryList(secondCategories, firstIsPlace, first));
+    }
 
-      categoryLists.push(this.buildCategoryList(childCategories, parentIsPlace, parentCategory));
+    if (state.thirdList) {
+      const thirdCategories = allCategories.filter(c => c.get('parentCategory.id') === second.id);
+
+      if (firstIsPlace && neighbourhoodId) {
+        let neighbourhoodIndex = thirdCategories.findIndex(c => c.id === neighbourhoodId);
+        thirdCategories.splice(0, 0, thirdCategories.splice(neighbourhoodIndex, 1)[0]);
+      }
+
+      categoryLists.push(this.buildCategoryList(thirdCategories, firstIsPlace, second));
     }
 
     contents.push(h('span.category-lists', categoryLists));
@@ -255,15 +274,13 @@ export default createWidget('civically-path', {
 
     contents.push(h('span.filter-lists', filterLists));
 
-    const tags = this.site.top_tags;
-
-    if (tags) {
+    if (category && category.category_tags.length) {
       let label = tag ? tag.get('id') : I18n.t('tagging.selector_all_tags');
       tagLists.push(h('span', '>'));
       tagLists.push(this.buildTitle('tag', label));
 
       if (state.tagList) {
-        tagLists.push(this.buildTagList(tags, category, filter));
+        tagLists.push(this.buildTagList(category.category_tags, category, filter));
       }
 
       contents.push(h('span.tag-lists', tagLists));
@@ -306,15 +323,16 @@ export default createWidget('civically-path', {
 
   showList(type) {
     this.state[`${type}List`] = !this.state[`${type}List`];
-    ['parent', 'child', 'filter', 'tag'].forEach((t) => {
+    ['first', 'second', 'third', 'filter', 'tag'].forEach((t) => {
       if (t !== type) this.state[`${t}List`] = false;
     });
     this.scheduleRerender();
   },
 
   hideLists() {
-    this.state.parentList = false;
-    this.state.childList = false;
+    this.state.firstList = false;
+    this.state.secondList = false;
+    this.state.thirdList = false;
     this.state.filterList = false;
     this.state.tagList = false;
     this.scheduleRerender();
@@ -367,8 +385,6 @@ export default createWidget('civically-path', {
       this.scheduleRerender();
     }
   },
-
-
 
   click() {
     if (this.state.show) {
