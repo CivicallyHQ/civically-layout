@@ -86,13 +86,13 @@ export default createWidget('civically-path', {
 
     let town;
     let country;
-    let multinationalCode;
+    let internationalCode;
     if (currentUser.town_category_id) {
       town = Category.findById(currentUser.town_category_id);
       country = Category.findById(town.parent_category_id);
 
       if (town.location) {
-        multinationalCode = town.location.geo_location.multinational_code;
+        internationalCode = town.location.geo_location.international_code;
       }
     }
 
@@ -101,7 +101,7 @@ export default createWidget('civically-path', {
       if (c.get('is_place')) {
         return town &&
                (town.parent_category_id === c.get('id') ||
-                multinationalCode === c.get('slug'));
+                internationalCode === c.get('slug'));
       } else {
         return true;
       }
@@ -126,7 +126,7 @@ export default createWidget('civically-path', {
       pinned: currentUser.pin_nav,
       pinSuccess: false,
       pinning: false,
-      multinationalCode
+      internationalCode
     };
   },
 
@@ -213,16 +213,6 @@ export default createWidget('civically-path', {
     let second = grandparentCategory ? parentCategory : first === parentCategory ? category : null;
     let third = grandparentCategory ? category : null;
 
-    const secondCategories = allCategories.filter(c => c.get('parentCategory.id') === first.id);
-
-    if (firstIsPlace && townId) {
-      let townIndex = secondCategories.findIndex(c => c.id === townId);
-
-      if (townIndex !== -1) {
-        secondCategories.splice(0, 0, secondCategories.splice(townIndex, 1)[0]);
-      }
-    }
-
     let firstIsPlace = first && first.is_place;
     let contents = [];
     let tagLists = [];
@@ -237,11 +227,21 @@ export default createWidget('civically-path', {
           state.firstCategories,
           firstIsPlace,
           null,
-          state.multinationalCode
+          state.internationalCode
         ));
       }
 
       contents.push(h('span.first-list', firstList));
+
+      const secondCategories = allCategories.filter(c => c.get('parentCategory.id') === first.id);
+
+      if (firstIsPlace && townId) {
+        let townIndex = secondCategories.findIndex(c => c.id === townId);
+
+        if (townIndex !== -1) {
+          secondCategories.splice(0, 0, secondCategories.splice(townIndex, 1)[0]);
+        }
+      }
 
       if (second) {
         let secondList = [];
@@ -305,7 +305,7 @@ export default createWidget('civically-path', {
           state.firstCategories,
           firstIsPlace,
           null,
-          state.multinationalCode
+          state.internationalCode
         ));
       }
 
@@ -391,8 +391,8 @@ export default createWidget('civically-path', {
     this.scheduleRerender();
   },
 
-  buildCategoryList(categories, showBorder, parentCategory = null, multinationalCode = null) {
-    let borderIndex = (parentCategory || multinationalCode) ? 1 : 0;
+  buildCategoryList(categories, showBorder, parentCategory = null, internationalCode = null) {
+    let borderIndex = (parentCategory || internationalCode) ? 1 : 0;
 
     let list = categories.map((category, index) => {
       const addBorder = index === borderIndex && showBorder;
