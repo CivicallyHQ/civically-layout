@@ -85,21 +85,34 @@ export default createWidget('civically-path', {
     const currentUser = this.currentUser;
 
     let town;
+    let country;
+    let multinationalCode;
     if (currentUser.town_category_id) {
       town = Category.findById(currentUser.town_category_id);
+      country = Category.findById(town.parent_category_id);
+
+      if (town.location) {
+        multinationalCode = town.location.geo_location.multinational_code;
+      }
     }
 
     const firstCategories = allCategories.filter(c => {
       if (c.get('parentCategory') || c.get('isUncategorizedCategory')) return false;
       if (c.get('is_place')) {
-        return town && town.parent_category_id === c.get('id');
+        return town &&
+               (town.parent_category_id === c.get('id') ||
+                multinationalCode === c.get('slug'));
       } else {
         return true;
       }
-    });
+    }).sort((a, b) => a.get('is_place') ? -1 : 1);
 
-    let firstIndex = firstCategories.findIndex(c => c.get('is_place'));
-    firstCategories.splice(0, 0, firstCategories.splice(firstIndex, 1)[0]);
+    firstCategories.forEach((c, i) => {
+      if (c.get('is_place')) {
+        let insertAt = town.parent_category_id === c.get('id') ? 0 : 1;
+        firstCategories.splice(insertAt, 0, firstCategories.splice(i, 1)[0]);
+      }
+    });
 
     return {
       allCategories,
@@ -112,7 +125,8 @@ export default createWidget('civically-path', {
       show: currentUser.pin_nav,
       pinned: currentUser.pin_nav,
       pinSuccess: false,
-      pinning: false
+      pinning: false,
+      multinationalCode
     };
   },
 
@@ -199,65 +213,104 @@ export default createWidget('civically-path', {
     let second = grandparentCategory ? parentCategory : first === parentCategory ? category : null;
     let third = grandparentCategory ? category : null;
 
+    const secondCategories = allCategories.filter(c => c.get('parentCategory.id') === first.id);
+
+    if (firstIsPlace && townId) {
+      let townIndex = secondCategories.findIndex(c => c.id === townId);
+
+      if (townIndex !== -1) {
+        secondCategories.splice(0, 0, secondCategories.splice(townIndex, 1)[0]);
+      }
+    }
+
     let firstIsPlace = first && first.is_place;
     let contents = [];
     let tagLists = [];
-    let categoryLists = [];
 
     if (first) {
-      categoryLists.push(this.buildTitle('first', first.name));
+      let firstList = [];
+
+      firstList.push(this.buildTitle('first', first.name));
+
+      if (state.firstList) {
+        firstList.push(this.buildCategoryList(
+          state.firstCategories,
+          firstIsPlace,
+          null,
+          state.multinationalCode
+        ));
+      }
+
+      contents.push(h('span.first-list', firstList));
 
       if (second) {
-        categoryLists.push(h('span', '>'));
-        categoryLists.push(this.buildTitle('second', second.name));
+        let secondList = [];
+
+        secondList.push(h('span', '>'));
+        secondList.push(this.buildTitle('second', second.name));
+
+        if (state.secondList) {
+          secondList.push(this.buildCategoryList(secondCategories, firstIsPlace, first));
+        }
+
+        contents.push(h('span.second-list', secondList));
+
+        let thirdList = [];
 
         if (third) {
-          categoryLists.push(h('span', '>'));
-          categoryLists.push(this.buildTitle('third', third.name));
+          thirdList.push(h('span', '>'));
+          thirdList.push(this.buildTitle('third', third.name));
         } else if (second.has_children) {
-          categoryLists.push(h('span', '>'));
-          categoryLists.push(this.buildTitle('third', I18n.t('categories.all_subcategories', {
+          thirdList.push(h('span', '>'));
+          thirdList.push(this.buildTitle('third', I18n.t('categories.all_subcategories', {
             categoryName: second.name
           })));
         }
+
+        if (state.thirdList) {
+          const thirdCategories = allCategories.filter(c => c.get('parentCategory.id') === second.id);
+
+          if (firstIsPlace && neighbourhoodId) {
+            let neighbourhoodIndex = thirdCategories.findIndex(c => c.id === neighbourhoodId);
+            thirdCategories.splice(0, 0, thirdCategories.splice(neighbourhoodIndex, 1)[0]);
+          }
+
+          thirdList.push(this.buildCategoryList(thirdCategories, firstIsPlace, second));
+        }
+
+        if (thirdList.length > 0) {
+          contents.push(h('span.third-list', thirdList));
+        }
       } else if (category.is_place || category.has_children) {
-        categoryLists.push(h('span', '>'));
-        categoryLists.push(this.buildTitle('second', I18n.t('categories.all_subcategories', {
+        let secondList = [];
+
+        secondList.push(h('span', '>'));
+        secondList.push(this.buildTitle('second', I18n.t('categories.all_subcategories', {
           categoryName: first.name
         })));
+
+        if (state.secondList) {
+          secondList.push(this.buildCategoryList(secondCategories, firstIsPlace, first));
+        }
+
+        contents.push(h('span.second-list', secondList));
       }
     } else {
-      categoryLists.push(this.buildTitle('first', I18n.t('categories.all')));
-    }
+      let firstList = [];
 
-    if (state.firstList) {
-      const firstCategories = state.firstCategories;
-      categoryLists.push(this.buildCategoryList(firstCategories, firstIsPlace));
-    }
+      firstList.push(this.buildTitle('first', I18n.t('categories.all')));
 
-    if (state.secondList) {
-      const secondCategories = allCategories.filter(c => c.get('parentCategory.id') === first.id);
-
-      if (firstIsPlace && townId) {
-        let townIndex = secondCategories.findIndex(c => c.id === townId);
-        secondCategories.splice(0, 0, secondCategories.splice(townIndex, 1)[0]);
+      if (state.firstList) {
+        firstList.push(this.buildCategoryList(
+          state.firstCategories,
+          firstIsPlace,
+          null,
+          state.multinationalCode
+        ));
       }
 
-      categoryLists.push(this.buildCategoryList(secondCategories, firstIsPlace, first));
+      contents.push(h('span.first-list', firstList));
     }
-
-    if (state.thirdList) {
-      const thirdCategories = allCategories.filter(c => c.get('parentCategory.id') === second.id);
-
-      if (firstIsPlace && neighbourhoodId) {
-        let neighbourhoodIndex = thirdCategories.findIndex(c => c.id === neighbourhoodId);
-        thirdCategories.splice(0, 0, thirdCategories.splice(neighbourhoodIndex, 1)[0]);
-      }
-
-      categoryLists.push(this.buildCategoryList(thirdCategories, firstIsPlace, second));
-    }
-
-    contents.push(h('span.category-lists', categoryLists));
 
     let filterLists = [];
 
@@ -338,9 +391,11 @@ export default createWidget('civically-path', {
     this.scheduleRerender();
   },
 
-  buildCategoryList(categories, showBorder, parentCategory = null) {
+  buildCategoryList(categories, showBorder, parentCategory = null, multinationalCode = null) {
+    let borderIndex = (parentCategory || multinationalCode) ? 1 : 0;
+
     let list = categories.map((category, index) => {
-      const addBorder = index === 0 && showBorder;
+      const addBorder = index === borderIndex && showBorder;
       return this.attach('category-list-item', { category, addBorder });
     });
 
