@@ -101,7 +101,8 @@ export default createWidget('civically-path', {
       if (c.get('is_place')) {
         return town &&
                (town.parent_category_id === c.get('id') ||
-                internationalCode === c.get('slug'));
+                c.get('slug') === internationalCode ||
+                c.get('slug') === 'world');
       } else {
         return true;
       }
@@ -109,7 +110,16 @@ export default createWidget('civically-path', {
 
     firstCategories.forEach((c, i) => {
       if (c.get('is_place')) {
-        let insertAt = town.parent_category_id === c.get('id') ? 0 : 1;
+        let insertAt;
+
+        if (town.parent_category_id === c.get('id')) {
+          insertAt = 0;
+        } else if (internationalCode) {
+          insertAt = c.get('slug') === internationalCode ? 1 : 2;
+        } else {
+          insertAt = 1;
+        }
+
         firstCategories.splice(insertAt, 0, firstCategories.splice(i, 1)[0]);
       }
     });
@@ -392,7 +402,7 @@ export default createWidget('civically-path', {
   },
 
   buildCategoryList(categories, showBorder, parentCategory = null, internationalCode = null) {
-    let borderIndex = (parentCategory || internationalCode) ? 1 : 0;
+    let borderIndex = (!parentCategory && internationalCode) ? 2 : 1;
 
     let list = categories.map((category, index) => {
       const addBorder = index === borderIndex && showBorder;
