@@ -8,21 +8,6 @@
 register_asset 'stylesheets/common/civically-navigation.scss'
 register_asset 'stylesheets/mobile/civically-navigation.scss', :mobile
 
-DiscourseEvent.on(:layouts_ready) do
-  SiteSetting.layouts_sidebar_left_enabled_global = true
-  SiteSetting.layouts_sidebar_right_enabled_global = true
-  SiteSetting.layouts_list_navigation_disabled_global = true
-  SiteSetting.layouts_list_header_disabled_global = true
-  SiteSetting.layouts_hide_sidebars_if_empty = true
-  SiteSetting.layouts_mobile_enabled = true
-  SiteSetting.layouts_sidebar_left_fixed = false
-  SiteSetting.layouts_sidebar_right_fixed = false
-end
-
-DiscourseEvent.on(:locations_ready) do
-  SiteSetting.location_topic_map = false
-end
-
 after_initialize do
   User.register_custom_field_type('pin_nav', :boolean)
   add_to_serializer(:current_user, :pin_nav) { object.pin_nav }
