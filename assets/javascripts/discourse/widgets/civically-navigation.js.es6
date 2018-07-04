@@ -90,7 +90,7 @@ export default createAppWidget('civically-navigation', {
               contents: () => {
                 return [
                   this.attach('place-image', { category: c }),
-                  h('span.place-name', c.place_name)
+                  h('a.place-name.p-link', c.place_name)
                 ];
               }
             })
