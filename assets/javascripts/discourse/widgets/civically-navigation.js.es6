@@ -58,7 +58,7 @@ export default createAppWidget('civically-navigation', {
 
     let contents = [ this.attach('map', mapOpts) ];
 
-    if (category) {
+    if (category && category.is_place) {
       let linkCategories = [];
 
       if (category.place_type === 'neighbourhood' || category.place_type === 'town') {
