@@ -58,45 +58,47 @@ export default createAppWidget('civically-navigation', {
 
     let contents = [ this.attach('map', mapOpts) ];
 
-    let linkCategories = [];
+    if (category) {
+      let linkCategories = [];
 
-    if (category.place_type === 'neighbourhood' || category.place_type === 'town') {
-      const parentCategory = Category.findById(category.parent_category_id);
-      linkCategories.push(parentCategory);
-    }
+      if (category.place_type === 'neighbourhood' || category.place_type === 'town') {
+        const parentCategory = Category.findById(category.parent_category_id);
+        linkCategories.push(parentCategory);
+      }
 
-    if (category.place_type === 'neighbourhood') {
-      const grandparentCategory = Category.findById(category.parentCategory.parent_category_id);
-      linkCategories.push(grandparentCategory);
-    }
+      if (category.place_type === 'neighbourhood') {
+        const grandparentCategory = Category.findById(category.parentCategory.parent_category_id);
+        linkCategories.push(grandparentCategory);
+      }
 
-    let intCode = category.location.geo_location.international_code;
+      let intCode = category.location.geo_location.international_code;
 
-    if (intCode && category.slug !== intCode) {
-      const internationalCategory = Category.findBySlug(intCode);
-      linkCategories.push(internationalCategory);
-    }
+      if (intCode && category.slug !== intCode) {
+        const internationalCategory = Category.findBySlug(intCode);
+        linkCategories.push(internationalCategory);
+      }
 
-    if (linkCategories.length) {
-      let placeLinks = [];
+      if (linkCategories.length) {
+        let placeLinks = [];
 
-      linkCategories.forEach((c) => {
-        placeLinks.push(h('li',
-          this.attach('link', {
-            className: 'place-link',
-            action: 'goToPlace',
-            actionParam: c,
-            contents: () => {
-              return [
-                this.attach('place-image', { category: c }),
-                h('span.place-name', c.place_name)
-              ];
-            }
-          })
-        ));
-      });
+        linkCategories.forEach((c) => {
+          placeLinks.push(h('li',
+            this.attach('link', {
+              className: 'place-link',
+              action: 'goToPlace',
+              actionParam: c,
+              contents: () => {
+                return [
+                  this.attach('place-image', { category: c }),
+                  h('span.place-name', c.place_name)
+                ];
+              }
+            })
+          ));
+        });
 
-      contents.push(h('ul.place-links', placeLinks));
+        contents.push(h('ul.place-links', placeLinks));
+      }
     }
 
     return contents;
