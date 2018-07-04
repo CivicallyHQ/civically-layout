@@ -123,6 +123,15 @@
   }
 }
 
+ul.place-links {
+  list-style: none;
+  margin: 4px 0;
+
+  li {
+    margin-top: 8px;
+  }
+}
+
 #topic-progress-wrapper {
   position: fixed !important;
   bottom: 0 !important;

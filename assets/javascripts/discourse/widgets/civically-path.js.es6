@@ -2,7 +2,6 @@ import { createWidget } from 'discourse/widgets/widget';
 import DiscourseURL from 'discourse/lib/url';
 import Category from 'discourse/models/category';
 import RawHtml from 'discourse/widgets/raw-html';
-import { getOwner } from 'discourse-common/lib/get-owner';
 import { popupAjaxError } from 'discourse/lib/ajax-error';
 import { categoryTagPath } from '../lib/utilities';
 import { iconNode } from 'discourse-common/lib/icon-library';
@@ -24,8 +23,8 @@ createWidget('category-list-item', {
   },
 
   html(attrs) {
-    const category = this.attrs.category;
-    const label = category ? category.get('name') : this.attrs.label;
+    const category = attrs.category;
+    const label = category ? category.get('name') : attrs.label;
     return h('span', label);
   },
 
@@ -87,6 +86,7 @@ export default createWidget('civically-path', {
     let town;
     let country;
     let internationalCode;
+
     if (currentUser.town_category_id) {
       town = Category.findById(currentUser.town_category_id);
       country = Category.findById(town.parent_category_id);
