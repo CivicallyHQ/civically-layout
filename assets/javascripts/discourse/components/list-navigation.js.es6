@@ -9,36 +9,45 @@ export default MountWidget.extend({
 
   buildArgs() {
     const category = this.get('category');
-    const tag = this.get('tag');
+    const tags = this.get('tags');
     const loading = this.get('loading');
     const context = this.get('context');
 
     return {
       category,
-      tag,
+      tags,
       loading,
       context
-    }
+    };
   },
 
-  @observes('category', 'tag', 'loading')
+  @observes('category', 'tags', 'loading')
   triggerRerender() {
     this.queueRerender();
   },
 
-  // necessary because the tags plugin outlet doesnt pass the category or the tag
   @on('init')
-  @observes('currentRoute')
-  setTagCategory() {
+  @observes('currentRoute', 'router.router.currentState.routerJsState.fullQueryParams')
+  routeWorkArounds() {
     const currentRoute = this.get('currentRoute');
+    const queryParams = this.get('router.router.currentState.routerJsState.fullQueryParams');
+
+    // necessary because the tags plugin outlet doesnt pass the category or the tag
     if (currentRoute.split('.')[0] === 'tags') {
       Ember.run.once(this, () => {
         const controller = getOwner(this).lookup('controller:tags-show');
         this.setProperties({
           category: controller.get('category'),
-          tag: controller.get('tag')
+          tags: [controller.get('tag.id')]
         });
       });
     }
+
+    if (currentRoute.toLowerCase().indexOf('category') > -1 && queryParams && queryParams['match_tags']) {
+      Ember.run.once(this, () => {
+        let matchTags = decodeURIComponent(queryParams['match_tags']);
+        this.set('tags', matchTags.split(','));
+      });
+    }
   }
-})
+});

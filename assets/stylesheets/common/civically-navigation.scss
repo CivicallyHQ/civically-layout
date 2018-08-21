@@ -175,6 +175,7 @@ div.inline-list-navigation .widget-multi-title {
 
   .civically-path {
     position: relative;
+    display: inline-block;
     padding: 10px 15px;
     line-height: 20px;
 
@@ -375,4 +376,8 @@ aside.sidebar {
   td:last-of-type {
     padding-right: 15px;
   }
+}
+
+.main-content .list-controls {
+  margin: 0;
 }

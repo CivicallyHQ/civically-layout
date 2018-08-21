@@ -3,7 +3,6 @@ import DiscourseURL from 'discourse/lib/url';
 import Category from 'discourse/models/category';
 import RawHtml from 'discourse/widgets/raw-html';
 import { popupAjaxError } from 'discourse/lib/ajax-error';
-import { categoryTagPath } from '../lib/utilities';
 import { iconNode } from 'discourse-common/lib/icon-library';
 import { ajax } from 'discourse/lib/ajax';
 import { cook } from 'discourse/lib/text';
@@ -64,14 +63,13 @@ createWidget('tag-list-item', {
 
   click() {
     this.sendWidgetAction('hideLists');
-    const category = this.attrs.category;
-    const filter = this.attrs.filter;
-    const tagId = this.attrs.tagId;
-    const tagPath = categoryTagPath(tagId, { category });
+    const tag = this.attrs.tagId.replace(' ', '_');
+    let tags = this.attrs.tags || [];
 
-    let url = filter ? tagPath + '/l/' + filter : tagPath;
-
-    DiscourseURL.routeTo(url);
+    if (tags.indexOf(tag) === -1) {
+      tags.push(tag);
+      this.sendWidgetAction('transitionToTags', tags);
+    }
   }
 });
 
@@ -79,24 +77,22 @@ export default createWidget('civically-path', {
   tagName: 'div.civically-path',
   buildKey: () => 'civically-path',
 
-  defaultState() {
+  defaultState(attrs) {
     const allCategories = this.site.get('categoriesList');
     const currentUser = this.currentUser;
 
     let town;
-    let country;
     let internationalCode;
 
     if (currentUser.town_category_id) {
       town = Category.findById(currentUser.town_category_id);
-      country = Category.findById(town.parent_category_id);
 
       if (town.location) {
         internationalCode = town.location.geo_location.international_code;
       }
     }
 
-    const firstCategories = allCategories.filter(c => {
+    let firstCategories = allCategories.filter(c => {
       if (c.get('parentCategory') || c.get('isUncategorizedCategory')) return false;
       if (c.get('is_place')) {
         return town &&
@@ -106,7 +102,7 @@ export default createWidget('civically-path', {
       } else {
         return true;
       }
-    }).sort((a, b) => a.get('is_place') ? -1 : 1);
+    }).sort((a) => a.get('is_place') ? -1 : 1);
 
     firstCategories.forEach((c, i) => {
       if (c.get('is_place')) {
@@ -124,9 +120,14 @@ export default createWidget('civically-path', {
       }
     });
 
+    if (Discourse.SiteSettings.invite_only) {
+      firstCategories = [firstCategories[0]];
+    }
+
     return {
       allCategories,
       firstCategories,
+      tags: attrs.tags,
       firstList: false,
       secondList: false,
       thirdList: false,
@@ -206,7 +207,7 @@ export default createWidget('civically-path', {
     const allCategories = state.allCategories;
 
     const category = attrs.category;
-    const tag = attrs.tag;
+    const tags = state.tags || attrs.tags;
 
     let parentCategory;
     let grandparentCategory;
@@ -329,21 +330,40 @@ export default createWidget('civically-path', {
     filterLists.push(h('span', '>'));
     filterLists.push(this.buildTitle('filter', formatFilter(filter)));
 
+    let excludedFilters = ['map'];
+
+    if (Discourse.SiteSettings.invite_only) {
+      excludedFilters.push(...['petitions', 'agenda', 'calendar', 'ratings', 'votes', 'top']);
+    }
+
     if (state.filterList) {
       let filters = Array.from(new Set(this.site.get('filters')));
-      filters = filters.filter((f) => f !== 'map');
+      filters = filters.filter((f) => excludedFilters.indexOf(f) === -1);
       filterLists.push(this.buildFilterList(filters, path));
     }
 
     contents.push(h('span.filter-lists', filterLists));
 
     if (category && category.category_tags.length) {
-      let label = tag ? tag.get('id') : I18n.t('tagging.selector_all_tags');
       tagLists.push(h('span', '>'));
-      tagLists.push(this.buildTitle('tag', label));
+
+      if (tags && tags.length) {
+        tags.forEach((t) => {
+          tagLists.push([
+            this.buildTitle('tag', t),
+            this.attach('link', {
+              action: 'removeTag',
+              actionParam: t,
+              icon: 'times'
+            })
+          ]);
+        });
+      } else {
+        tagLists.push(this.buildTitle('tag', I18n.t('tagging.selector_all_tags')));
+      }
 
       if (state.tagList) {
-        tagLists.push(this.buildTagList(category.category_tags, category, filter));
+        tagLists.push(this.buildTagList(category.category_tags, tags, category, filter));
       }
 
       contents.push(h('span.tag-lists', tagLists));
@@ -382,6 +402,40 @@ export default createWidget('civically-path', {
     contents.push(h('span.display-controls', displayControls));
 
     return h('div.widget-multi-title', contents);
+  },
+
+  removeTag(tag) {
+    const location = window.location;
+    const path = location.pathname;
+    const query = location.search;
+    let tags = [];
+
+    if (query.indexOf('match_tags') > -1) {
+      let tagString = query.match(/match_tags=(.*)/)[1];
+      if (tagString) {
+        tags = decodeURIComponent(tagString).split(',');
+      }
+    } else if (path.indexOf('/tags/') > -1) {
+      tags = path.split('/');
+    }
+
+    tags = tags.filter((t) => t !== tag);
+
+    this.transitionToTags(tags);
+  },
+
+  transitionToTags(tags) {
+    this.state.tags = tags;
+    this.scheduleRerender();
+    const router = DiscourseURL.get("router._routerMicrolib");
+
+    let queryParams = {};
+
+    if (tags && tags.length) {
+      queryParams['match_tags'] = tags.join(',');
+    }
+
+    router.transitionTo({ queryParams });
   },
 
   showList(type) {
@@ -425,20 +479,20 @@ export default createWidget('civically-path', {
     }));
   },
 
-  buildTagList(tags, category, filter) {
+  buildTagList(tagList, tags, category, filter) {
 
-    if (!tags || !tags.length) return null;
+    if (!tagList || !tagList.length) return null;
 
     const catUrl = category.get('url');
-    let allUrl = filter ? catUrl + '/l/' + filter : catUrl
+    let allUrl = filter ? catUrl + '/l/' + filter : catUrl;
 
     let list = [this.attach('category-list-item', {
       label: I18n.t('tagging.selector_all_tags'),
       url: allUrl
     })];
 
-    list.push(...tags.map(tagId => {
-      return this.attach('tag-list-item', { tagId, category, filter });
+    list.push(...tagList.map(tagId => {
+      return this.attach('tag-list-item', { tagId, tags, category, filter });
     }));
 
     return h('ul.nav-dropdown', list);
