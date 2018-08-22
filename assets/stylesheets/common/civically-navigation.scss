@@ -222,13 +222,14 @@ div.inline-list-navigation .widget-multi-title {
 
       .tip {
         position: absolute;
-        right: 0;
+        left: 0;
         width: 250px;
         top: -60px;
         padding: 5px 8px;
         background-color: $secondary;
         box-shadow: shadow('card');
         border: 1px solid $primary-low;
+        z-index: 1;
 
         p {
           margin: 0;
