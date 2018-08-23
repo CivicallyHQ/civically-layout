@@ -7,6 +7,7 @@ import { iconNode } from 'discourse-common/lib/icon-library';
 import { ajax } from 'discourse/lib/ajax';
 import { cook } from 'discourse/lib/text';
 import { h } from 'virtual-dom';
+import { resourceLink } from 'discourse/plugins/civically-resources/discourse/lib/resource-utilities';
 
 const formatFilter = function(filter) {
   return filter.charAt(0).toUpperCase() + filter.slice(1);
@@ -128,11 +129,11 @@ export default createWidget('civically-path', {
       allCategories,
       firstCategories,
       tags: attrs.tags,
-      firstList: false,
-      secondList: false,
-      thirdList: false,
-      filterList: false,
-      tagList: false,
+      firstList: null,
+      secondList: null,
+      thirdList: null,
+      filterList: null,
+      tagList: null,
       show: currentUser.pin_nav,
       pinned: currentUser.pin_nav,
       pinSuccess: false,
@@ -141,10 +142,18 @@ export default createWidget('civically-path', {
     };
   },
 
-  buildTitle(type, name) {
+  buildTitle(type, name, opts = {}) {
+    let actionParam = {
+      type
+    };
+
+    if (opts.listType) {
+      actionParam['listType'] = opts.listType;
+    }
+
     return this.attach('link', {
       action: 'showList',
-      actionParam: type,
+      actionParam,
       rawTitle: name,
       rawLabel: name,
       className: `list-title ${name}`
@@ -273,9 +282,7 @@ export default createWidget('civically-path', {
           thirdList.push(this.buildTitle('third', third.name));
         } else if (second.has_children) {
           thirdList.push(h('span', '>'));
-          thirdList.push(this.buildTitle('third', I18n.t('categories.all_subcategories', {
-            categoryName: second.name
-          })));
+          thirdList.push(this.buildTitle('third', this.allLabel(firstIsPlace, second.name)));
         }
 
         if (state.thirdList) {
@@ -296,9 +303,7 @@ export default createWidget('civically-path', {
         let secondList = [];
 
         secondList.push(h('span', '>'));
-        secondList.push(this.buildTitle('second', I18n.t('categories.all_subcategories', {
-          categoryName: first.name
-        })));
+        secondList.push(this.buildTitle('second', this.allLabel(firstIsPlace, first.name)));
 
         if (state.secondList) {
           secondList.push(this.buildCategoryList(secondCategories, firstIsPlace, first));
@@ -344,29 +349,47 @@ export default createWidget('civically-path', {
 
     contents.push(h('span.filter-lists', filterLists));
 
-    if (category && category.category_tags.length) {
-      tagLists.push(h('span', '>'));
+    tagLists.push(h('span', '>'));
+
+    const civicallyTags = this.site.get('civically_tags');
+
+    Object.keys(civicallyTags).forEach(group => {
+      let currentTag;
 
       if (tags && tags.length) {
-        tags.forEach((t) => {
-          tagLists.push([
-            this.buildTitle('tag', t),
-            this.attach('link', {
-              action: 'removeTag',
-              actionParam: t,
-              icon: 'times'
-            })
-          ]);
-        });
+        currentTag = tags.find(t => civicallyTags[group].indexOf(t) > -1);
+      }
+
+      if (currentTag) {
+        tagLists.push([
+          this.buildTitle('tag', currentTag, { listType: group }),
+          this.attach('link', {
+            action: 'removeTag',
+            actionParam: currentTag,
+            icon: 'times'
+          })
+        ]);
       } else {
-        tagLists.push(this.buildTitle('tag', I18n.t('tagging.selector_all_tags')));
+        tagLists.push(this.buildTitle(
+          'tag',
+          I18n.t('tagging.all_of_group', { group }),
+          { listType: group })
+        );
       }
+    });
 
-      if (state.tagList) {
-        tagLists.push(this.buildTagList(category.category_tags, tags, category, filter));
-      }
+    if (state.tagList) {
+      tagLists.push(this.buildTagList(civicallyTags[state.tagList], tags, category, filter, state.tagList));
+    }
 
-      contents.push(h('span.tag-lists', tagLists));
+    contents.push(h('span.tag-lists', tagLists));
+
+    if (tags && tags.length > 1) {
+      let linkHtml = new RawHtml({ html: resourceLink({
+        category,
+        tags
+      })});
+      contents.push(h('span.nav-resource-link', linkHtml));
     }
 
     let displayControls = [];
@@ -438,34 +461,46 @@ export default createWidget('civically-path', {
     router.transitionTo({ queryParams });
   },
 
-  showList(type) {
-    this.state[`${type}List`] = !this.state[`${type}List`];
+  showList(opts) {
+    if (opts.listType) {
+      if (this.state[`${opts.type}List`] === opts.listType) {
+        this.state[`${opts.type}List`] = null;
+      } else {
+        this.state[`${opts.type}List`] = opts.listType;
+      }
+    } else {
+      this.state[`${opts.type}List`] = !this.state[`${opts.type}List`];
+    }
+
     ['first', 'second', 'third', 'filter', 'tag'].forEach((t) => {
-      if (t !== type) this.state[`${t}List`] = false;
+      if (t !== opts.type) this.state[`${t}List`] = null;
     });
+
     this.scheduleRerender();
   },
 
   hideLists() {
-    this.state.firstList = false;
-    this.state.secondList = false;
-    this.state.thirdList = false;
-    this.state.filterList = false;
-    this.state.tagList = false;
+    this.state.firstList = null;
+    this.state.secondList = null;
+    this.state.thirdList = null;
+    this.state.filterList = null;
+    this.state.tagList = null;
     this.scheduleRerender();
   },
 
-  buildCategoryList(categories, showBorder, parentCategory = null, internationalCode = null) {
+  buildCategoryList(categories, firstIsPlace, parentCategory = null, internationalCode = null) {
     let borderIndex = (!parentCategory && internationalCode) ? 2 : 1;
 
     let list = categories.map((category, index) => {
-      const addBorder = index === borderIndex && showBorder;
+      const addBorder = index === borderIndex && firstIsPlace;
       return this.attach('category-list-item', { category, addBorder });
     });
 
     if (parentCategory) {
+      let label = this.allLabel(firstIsPlace, parentCategory.name);
+
       list.unshift(this.attach('category-list-item', {
-        label: I18n.t('categories.all_subcategories', { categoryName: parentCategory.name }),
+        label,
         url: parentCategory.get('url')
       }));
     }
@@ -479,7 +514,7 @@ export default createWidget('civically-path', {
     }));
   },
 
-  buildTagList(tagList, tags, category, filter) {
+  buildTagList(tagList, tags, category, filter, group) {
 
     if (!tagList || !tagList.length) return null;
 
@@ -487,7 +522,7 @@ export default createWidget('civically-path', {
     let allUrl = filter ? catUrl + '/l/' + filter : catUrl;
 
     let list = [this.attach('category-list-item', {
-      label: I18n.t('tagging.selector_all_tags'),
+      label: I18n.t('tagging.all_of_group', { group }),
       url: allUrl
     })];
 
@@ -496,6 +531,11 @@ export default createWidget('civically-path', {
     }));
 
     return h('ul.nav-dropdown', list);
+  },
+
+  allLabel(firstIsPlace, parentName) {
+    return firstIsPlace ? I18n.t('place.all_towns') :
+      I18n.t('categories.all_subcategories', { categoryName: parentName });
   },
 
   closeTip() {

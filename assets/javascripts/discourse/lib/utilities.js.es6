@@ -95,7 +95,7 @@ const categoryTagPath = function(tag, params) {
   }
 
   return path;
-}
+};
 
 const renderCategoryTag = function(tag, params) {
   params = params || {};
@@ -122,4 +122,9 @@ const renderCategoryTag = function(tag, params) {
   return val;
 };
 
-export { buildTitle, clearUnreadList, renderCategoryTags, renderCategoryTag, categoryTagPath };
+const tagGroup = function(tag) {
+  const civicallyTags = Discourse.currentProp('civically_tags');
+  return Object.keys(civicallyTags).find((g) => civicallyTags[g].indexOf(tag) > -1);
+};
+
+export { buildTitle, clearUnreadList, renderCategoryTags, renderCategoryTag, categoryTagPath, tagGroup };

@@ -6,6 +6,12 @@ en:
         locked: "Become a member of a place to unlock the Map App."
         icon: ":map:"
 
+    place:
+      all_towns: "all towns"
+
+    tagging:
+      all_of_group: "all {{group}}"
+
     user:
       navigation:
         title: "Navgiation"
