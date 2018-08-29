@@ -1,0 +1,26 @@
+{{#if context.siteSettings.rating_topic_list_average_enabled}}
+  {{#if context.topic.show_average}}
+    {{#if context.topic.has_ratings}}
+      <div class="topic-rating">
+        <a href='{{context.topic.url}}'>
+          {{star-rating-raw context.topic.average_rating}}
+          <span class="rating-count">
+            {{context.topic.rating_count}}
+          </span>
+        </a>
+      </div>
+    {{/if}}
+  {{/if}}
+{{/if}}
+{{#if context.topic.event}}
+  {{#if context.siteSettings.events_rsvp}}
+    {{#if context.topic.event.rsvp}}
+      <div class="topic-list-event-rsvp">
+        <a href="{{context.topic.lastUnreadUrl}}" class="{{context.topic.topicListItemClasses}}">
+          <span>{{context.topic.event_going_total}}</span>
+          <span>{{i18n 'event_rsvp.going.label'}}</span>
+        </a>
+      </div>
+    {{/if}}
+  {{/if}}
+{{/if}}
