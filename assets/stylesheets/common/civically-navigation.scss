@@ -230,7 +230,7 @@ div.inline-list-navigation .widget-multi-title {
         background-color: $secondary;
         box-shadow: shadow('card');
         border: 1px solid $primary-low;
-        z-index: 1;
+        z-index: 5;
 
         p {
           margin: 0;

@@ -13,7 +13,7 @@ export default {
     withPluginApi('0.8.13', api => {
       api.modifyClass('route:tags-index', {
         redirect() {
-          //this.replaceWith(placeUrl(currentUser));
+          this.replaceWith(placeUrl(currentUser));
         }
       });
 

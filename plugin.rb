@@ -11,6 +11,7 @@ register_asset 'stylesheets/mobile/civically-navigation.scss', :mobile
 after_initialize do
   User.register_custom_field_type('pin_nav', :boolean)
   add_to_serializer(:current_user, :pin_nav) { object.pin_nav }
+  register_editable_user_custom_field :pin_nav if defined? register_editable_user_custom_field
 
   class ::User
     def pin_nav
