@@ -31,7 +31,8 @@ export default {
       api.modifyClass('route:discovery', {
         redirect() {
           const path = window.location.pathname;
-          if (path === "/" || path === "/categories") {
+          const isAdmin = this.get('currentUser.admin');
+          if (!isAdmin && (path === "/" || path === "/categories")) {
             DiscourseURL.routeTo(placeUrl(currentUser));
           }
         }
@@ -59,7 +60,9 @@ export default {
       var route = container.lookup(`route:discovery.${route}`);
       route.reopen({
         redirect() {
-          return DiscourseURL.routeTo(placeUrl(currentUser));
+          if (!currentUser.admin) {
+            return DiscourseURL.routeTo(placeUrl(currentUser));
+          }
         }
       });
     });
