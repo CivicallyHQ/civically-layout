@@ -88,7 +88,7 @@ export default createWidget('civically-path', {
     if (currentUser.town_category_id) {
       town = Category.findById(currentUser.town_category_id);
 
-      if (town.location) {
+      if (town.location && town.location.geo_location) {
         internationalCode = town.location.geo_location.international_code;
       }
     }

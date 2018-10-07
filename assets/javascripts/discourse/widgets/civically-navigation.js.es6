@@ -71,7 +71,7 @@ export default createAppWidget('civically-navigation', {
         linkCategories.push(grandparentCategory);
       }
 
-      let intCode = category.location.geo_location.international_code;
+      let intCode = category.location["geo_location"].international_code;
 
       if (intCode && category.slug !== intCode) {
         const internationalCategory = Category.findBySlug(intCode);
