@@ -5,7 +5,7 @@ import RawHtml from 'discourse/widgets/raw-html';
 import { popupAjaxError } from 'discourse/lib/ajax-error';
 import { iconNode } from 'discourse-common/lib/icon-library';
 import { ajax } from 'discourse/lib/ajax';
-import { cook } from 'discourse/lib/text';
+import { cookAsync } from 'discourse/lib/text';
 import { h } from 'virtual-dom';
 import { resourceLink } from 'discourse/plugins/civically-resources/discourse/lib/resource-utilities';
 
@@ -394,10 +394,19 @@ export default createWidget('civically-path', {
 
     let displayControls = [];
 
+    if (!state.pinTip) {
+      let raw = I18n.t('user.navigation.pin.tip');
+      state.pinTip = raw;
+      cookAsync(raw).then((cooked) => {
+        state.pinTip = cooked;
+        this.scheduleRerender();
+      })
+    }
+
     if (state.pinning) {
       displayControls.push(h('div.spinner'));
     } else if (state.pinSuccess) {
-      const html = cook(I18n.t('user.navigation.pin.tip'));
+      let html = state.pinTip;
       const tip = new RawHtml({ html: html.string });
       displayControls.push([
         iconNode('check'),
