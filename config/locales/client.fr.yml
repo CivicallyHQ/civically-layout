@@ -1,0 +1,26 @@
+fr:
+  js:
+    app:
+      civically_navigation:
+        title: "Carte"
+        locked: "Devenez membre d'un lieu pour déverrouiller l'application Map."
+        icon: ":carte:"
+
+    place:
+      all_towns: "toutes les villes"
+
+    tagging:
+      all_of_group: "tous {{groupe}}"
+
+    user:
+      navigation:
+        title: "Navigation"
+        show:
+          label: "Navigation"
+          title: "Afficher la navigation"
+        hide:
+          title: "Masquer la navigation"
+        pin:
+          title: "Navigation par code"
+          tip: "Navigation épinglée. Vous pouvez changer cela dans vos [préférences d'interface] (/my/preferences/interface)."
+          description: "Navigation dans la liste des broches."
